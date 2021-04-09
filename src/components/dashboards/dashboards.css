@@ -1,0 +1,76 @@
+.position-relative {
+    position: relative;
+}
+
+.rounded-corners {
+    border-radius: 8px;
+    box-shadow: 0 10px 20px 0 rgb(174 201 228 / 30%);
+}
+.background-white {
+    background-color: white;
+}
+.fadeIn {
+    -webkit-animation-name: fadeIn;
+    animation-name: fadeIn;
+}
+.animated {
+    -webkit-animation-duration: 500ms;
+    animation-duration: 500ms;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+}
+
+.bg-alice-blue{
+    background-color: #f5faff;
+}
+
+.h3-text{
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 20px;
+    color: #343740;
+}
+
+
+.flex-container{
+    display: flex;
+    flex-direction: row;
+}
+
+.flex-container .dynamic-card{
+    width: 100%;
+    z-index: 9;
+    cursor: pointer;
+}
+
+.flex-container .dynamic-card:hover{
+    transform: translateY(-1px);
+}
+
+.flex-container .dynamic-card .card-head{
+    padding: 15px 10px 0 15px;
+}
+
+.card-body .row{
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.total-users{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+}
+
+.users-body hr{
+    width:10%;
+}
+
+.all-user-cards{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+}

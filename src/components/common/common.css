@@ -1,0 +1,31 @@
+.circular-div{
+    text-align: center;
+    width: auto;
+}
+
+.circle{
+    border-radius: 50%;
+}
+
+.align-center{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.white-text{
+    color:white;
+}
+
+.circular-text-below{
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.circle hr{
+    margin:0;
+    width: 50%;
+    background-color: white;
+}

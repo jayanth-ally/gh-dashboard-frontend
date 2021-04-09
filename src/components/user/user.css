@@ -1,0 +1,19 @@
+.user-card{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 5px;
+    margin: 10px;
+    cursor: pointer;
+    -webkit-animation-duration: 500ms;
+    animation-duration: 500ms;
+}
+.user-card:hover{
+    transform: scale(1.2);
+}
+
+.time-taken{
+    display: flex;
+    justify-content: space-evenly;
+}

@@ -1,17 +1,3 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
 
 .App-header {
   background-color: #282c34;
@@ -35,4 +21,20 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.home-card{
+  width: 80%;
+  min-height: 600px;
+  margin-left:15%;
+  margin-right:15%;
+  color:#282c34;
+}
+
+.card-head{
+  width: 100%;
+}
+
+.card-body{
+  width: 100%;
 }
