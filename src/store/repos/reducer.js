@@ -1,6 +1,6 @@
 import {createSlice} from '@reduxjs/toolkit';
 
-import {addReposAction,clearReposAction,selectRepoAction,clearSelectedRepo, clearSelectedRepoAction} from './actions';
+import {addReposAction,clearReposAction,selectRepoAction, clearSelectedRepoAction,addPrsAction,clearPrsAction} from './actions';
 
 const initialState = {
     all:[],
@@ -12,10 +12,12 @@ const repos = createSlice({
     initialState,
     extraReducers:{
         [addReposAction.type]: (repos,{payload}) => {
-            repos.all = payload.all;
+            payload.all.map((repo)=>{
+                repos.all.push({...repo,prs:[]});
+            })
             return repos;
         },
-        [clearReposAction.type]: (repos,{payload}) => {
+        [clearReposAction.type]: (repos) => {
             repos = initialState;
             return repos;
         },
@@ -23,8 +25,13 @@ const repos = createSlice({
             repos.selected = payload.selected;
             return repos;
         },
-        [clearSelectedRepoAction.type]: (repos,{payload}) => {
+        [clearSelectedRepoAction.type]: (repos) => {
             repos.selected = {};
+            return repos;
+        },
+        [addPrsAction.type]: (repos,{payload}) => {
+            let index = repos.all.findIndex((repo)=>repo.id === payload.repo.id);
+            repos.all[index].prs = payload.prs;
             return repos;
         }
     }

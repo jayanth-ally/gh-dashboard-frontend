@@ -10,13 +10,19 @@ import {
     USER_ROUTE,
     ALL_USERS_ROUTE,
     CREATE_TEAM_ROUTE,
-    EDIT_TEAM_ROUTE
+    EDIT_TEAM_ROUTE,
+    TEAMS_ROUTE,
+    TEAM_ROUTE
 } from '../../config/routes';
 
 import HomeDashboard from '../dashboards/homeDashboard';
 import PrDashboard from '../dashboards/prDashboard';
 import UserDashboard from '../dashboards/userDashboard';
+import TeamDashboard from '../dashboards/teamDashboard';
+import PR from '../pr/pr';
 import User from '../user/user';
+import EditTeam from '../team/editTeam';
+import Team from '../team/team';
 
 import {logoutUser} from '../../store/users/actions';
 
@@ -32,6 +38,7 @@ const Home = (props) => {
         home:HOME_ROUTE,
         pr:PR_ROUTE,
         users:ALL_USERS_ROUTE,
+        manageTeam:TEAMS_ROUTE,
         createTeam:CREATE_TEAM_ROUTE,
         editTeam:EDIT_TEAM_ROUTE
     }
@@ -107,28 +114,13 @@ const Home = (props) => {
                                     Users
                                 </Link>
                             </li>
-                        </ul>
-                        <hr/>
-                        <h6 className="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                            <span>Manage Teams</span>
-                        </h6>
-                        <ul className="nav flex-column mb-2">
                             <li className="nav-item">
                                 <Link 
-                                    className={selectedLink==="createTeam"?"nav-link active":"nav-link"} 
-                                    to={links.createTeam}
-                                    onClick={()=>onLinkClicked('createTeam')}
+                                    className={selectedLink==="manageTeam"?"nav-link active":"nav-link"} 
+                                    to={links.manageTeam}
+                                    onClick={()=>onLinkClicked('manageTeam')}
                                     >
-                                    Create Team
-                                </Link>
-                            </li>
-                            <li className="nav-item">
-                                <Link 
-                                    className={selectedLink==="editTeam"?"nav-link active":"nav-link"} 
-                                    to={links.editTeam}
-                                    onClick={()=>onLinkClicked('editTeam')}
-                                    >
-                                    Edit Team
+                                    Teams
                                 </Link>
                             </li>
                         </ul>
@@ -136,10 +128,14 @@ const Home = (props) => {
                 </nav>
                 <main role="main" className="col-md-9 ml-sm-auto col-lg-10 px-4">                    
                     {current.isLogged && <Switch>
-                        <Route path={PR_ROUTE+'/:owner/:name'} exact component={PrDashboard}/>
-                        <Route path={PR_ROUTE} exact component={PrDashboard}/>
-                        <Route path={USER_ROUTE} exact component={User}/>
-                        <Route path={ALL_USERS_ROUTE} exact component={UserDashboard}/>
+                        <Route path={PR_ROUTE+'/:owner/:name'} component={PR}/>
+                        <Route path={PR_ROUTE} component={PrDashboard}/>
+                        <Route path={USER_ROUTE} component={User}/>
+                        <Route path={ALL_USERS_ROUTE} component={UserDashboard}/>
+                        <Route path={CREATE_TEAM_ROUTE} component={EditTeam}/>
+                        <Route path={EDIT_TEAM_ROUTE} component={EditTeam}/>
+                        <Route path={TEAMS_ROUTE} component={TeamDashboard}/>
+                        <Route path={TEAM_ROUTE} component={Team}/>
                         <Route path={HOME_ROUTE} exact component={HomeDashboard}/>
                         <Redirect to={HOME_ROUTE} />
                     </Switch>}

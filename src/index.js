@@ -3,10 +3,11 @@ import ReactDOM from 'react-dom';
 
 import {Provider} from 'react-redux';
 import Store from './store/store';
-// import './index.css';
+import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+
 
 const store = Store();
 
