@@ -1,0 +1,27 @@
+.team-body .flex-container{
+    justify-content: center;
+    align-items: center;
+}
+
+.team-fields-card{
+    width: 80% !important;
+    height: 80%;
+    padding: 20px;
+}
+
+.user-dropdown ul{
+    list-style: none;
+    margin-top: 5px;
+}
+
+.user-dropdown ul li{
+    padding: 10px;
+    border-radius: 10px;
+    margin-right:10px;
+}
+
+.user-dropdown ul li:hover{
+    cursor: pointer;
+    color:white;
+    background-color: #13ce95;
+}

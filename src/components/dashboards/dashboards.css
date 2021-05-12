@@ -37,13 +37,45 @@
     flex-direction: row;
 }
 
+.empty-dashboard{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
 .flex-container .dynamic-card{
     width: 100%;
     z-index: 9;
+}
+
+.pointer{
     cursor: pointer;
 }
 
-.flex-container .dynamic-card:hover{
+.fit{
+    width: fit-content !important;
+    min-width: 100px;
+    min-height: 100px;
+    padding: 10px;
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.fit .team-name{
+    display: flex;
+    justify-content: center;
+}
+
+.fit hr{
+    width: 80%;
+}
+
+
+.hover-card:hover{
     transform: translateY(-1px);
 }
 
@@ -73,4 +105,16 @@
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-evenly;
+}
+
+.team-name{
+    display: flex;
+    justify-content: center;
+    padding-top: 5px;
+    font-weight: 600;
+}
+
+.action-btns{
+    width: 100%;
+    margin-top: 5px;
 }

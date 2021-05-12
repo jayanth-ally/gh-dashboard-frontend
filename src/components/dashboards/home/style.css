@@ -1,0 +1,20 @@
+.pr-cycle-circle{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 2px solid #f36f21;
+}
+
+.pr-cycle{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px;
+    height: 100px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #f36f21;
+}

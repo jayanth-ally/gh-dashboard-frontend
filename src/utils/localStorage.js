@@ -8,7 +8,7 @@ const getUserLogin = () => {
     const logged = localStorage.getItem('logged');
     const user = localStorage.getItem('user');
     if(logged) return JSON.parse(user);
-    return null;
+    return {};
 }
 
 const setUserLogin = (user) => {

@@ -1,5 +1,7 @@
 import {createSlice} from '@reduxjs/toolkit';
 
+import * as localStorage from '../../utils/localStorage';
+
 import {
     loginUserAction,
     logoutUserAction,
@@ -14,8 +16,8 @@ const initialState = {
     all:[],
     selected:{},
     current:{
-        isLogged:false,
-        user:{}
+        isLogged:localStorage.isUserLoggedIn(),
+        user:localStorage.getUserLogin()
     }
 }
 
@@ -25,10 +27,12 @@ const users = createSlice({
     extraReducers:{
         [loginUserAction.type]: (users,{payload}) => {
             users.current = payload.current;
+            localStorage.setUserLogin(payload.current);
             return users;
         },
         [logoutUserAction.type]: (users,{payload}) => {
             users.current = initialState.current;
+            localStorage.logoutUser();
             return users;
         },
         [addUsersAction.type]: (users,{payload}) => {
