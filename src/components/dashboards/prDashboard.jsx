@@ -1,5 +1,6 @@
 import { useState,useEffect } from "react";
 import { useDispatch,useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import ReactECharts from 'echarts-for-react';
 
 import Loading from "../loading/loading";
@@ -21,6 +22,10 @@ const PrDashboard = (props) => {
     const dispatch = useDispatch();
     const repos = useSelector(state => state.repos.all || []);
     const [isLoading,setIsLoading] = useState(false);
+
+    useEffect(()=>{
+        props.setNavKey(props.navKey);
+    },[])
 
     useEffect(()=>{
         if(repos.length === 0){
@@ -49,13 +54,17 @@ const PrDashboard = (props) => {
     },[dispatch])
 
     const repoOnClick = (repo) => {
-        console.log('repo',repo.name,'clicked');
         dispatch(selectRepo(repo));
         props.history.push(PR_ROUTE+"/"+repo.owner+"/"+repo.name);
     }
 
     return isLoading?<Loading/>:(
         <>
+        <div className="breadcrumbs">
+            <Link to={HOME_ROUTE}>Home</Link>
+            <span>/</span>
+            <span>Pull Requests</span>
+        </div>
         <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h1 className="h2">PR Dashboard (Last 7 days)</h1>
             <div className="btn-toolbar mb-2 mb-md-0">
@@ -76,7 +85,7 @@ const PrDashboard = (props) => {
                                     <hr/>
                                 </div>
                                 <div className="card-body">
-                                        <ReactECharts option={charts.getStackedLineForNoOfPrs(repo.prs)} />
+                                        <ReactECharts option={charts.getBarForNoOfPrs(repo.prs)} />
                                 </div>
                             </div>
                         </div>);

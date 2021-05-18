@@ -37,6 +37,9 @@ const calculatePrsByDate = (prs,options={}) => {
 }
 
 const filterPrsByDate = (prs,options) => {
+    if(options === {}){
+        return prs;
+    }
     let from = '';
     let to = '';
     if(options.hasOwnProperty('lastdays')){
@@ -60,7 +63,6 @@ const filterPrsByDate = (prs,options) => {
     from = convertDate(from);
     to = getNextDate(to);
     let arr = prs.filter(pr => pr.updatedAt >= from && pr.updatedAt <= to);
-    arr = prs;
     return arr;
 }
 
@@ -316,6 +318,9 @@ const calculatePrReviews = (prs) => {
             
         }
     })
+    if(total===0){
+        total=1;
+    }
     return [avg,avg/total,{value:max,pr:maxPr},total,{total:avgIteration,avg:ParseFloat(avgIteration/total),max:maxIteration,maxPr:maxIterationPr}];
 }
 
@@ -374,7 +379,12 @@ const calculatePrCycle = (prs,options={}) => {
         from.setDate(to.getDate() - 6);
     }
 
-    const arr = prs.filter((pr) => pr.createdAt >= convertDate(from) && pr.closedAt !== null && pr.closedAt <= convertDate(to));
+    let timeTaken = 0;
+    if(options.hasOwnProperty('prCycle') && options.prCycle){
+        timeTaken = 14400;
+    }
+
+    const arr = prs.filter((pr) => pr.createdAt >= convertDate(from) && pr.closedAt !== null && pr.closedAt <= convertDate(to) && pr.timeTaken > timeTaken);
     return calculateMetrics(arr);
 }
 
@@ -426,8 +436,9 @@ const getQuery = (repo,options={}) => {
 }
 
 function ParseFloat(str,val=2) {
-    str = str.toString();
-    str = str.slice(0, (str.indexOf(".")) + val + 1); 
+    // str = str.toString();
+    // str = str.slice(0, (str.indexOf(".")) + val + 1); 
+    str = str.toFixed(val);
     return Number(str);   
 }
 

@@ -4,8 +4,8 @@ import {Link} from 'react-router-dom';
 import CircleIndicator from '../../common/circleIndicator';
 import ChartCard from '../../common/chartCard/index';
 
-import { calculatePrCycle } from '../../../utils/pr-calculations';
-import { convertTimeToDays } from '../../../utils/time-conversion';
+import { calculateMetrics, calculatePrCycle } from '../../../utils/pr-calculations';
+import { convertDate, convertTimeToDays } from '../../../utils/time-conversion';
 import {prsLastWeek,prsLastDay} from '../../../config/chat-items';
 
 import './style.css';
@@ -19,10 +19,16 @@ const Organization = ({repos,users}) => {
             open:0,
             closed:0,
             merged:0,
-            cycle:0
+            cycle:0,
         },
+        reverts:0,
+        commits:0,
+        resolved:0,
+        reviews:0,
+        reviewed:0,
         arr:[],
         arrToday:[],
+        filteredArr:[],
     };
 
     repos.map(repo => {
@@ -37,8 +43,26 @@ const Organization = ({repos,users}) => {
     yesterday.setDate(yesterday.getDate()-1);
     data.arrToday = data.arr.filter((pr)=> pr.updatedAt >= yesterday.toISOString());
 
-    const result = calculatePrCycle(data.arr);
+    let result = calculatePrCycle(data.arr,{prCycle:true});
     data.prs.cycle = convertTimeToDays(result.timeTaken.avg);
+    
+    result = calculatePrCycle(data.arr);
+    data.commits = result.commits.total;
+    data.reviews = result.reviews.total;
+    data.reverts = result.commits.reverts;
+    data.resolved = result.count.closed+result.count.merged;
+
+    let to = new Date();
+    let from = new Date();
+    from.setDate(to.getDate() - 6);
+
+    data.filteredArr = data.arr.filter((pr) => pr.createdAt >= convertDate(from) && pr.closedAt !== null && pr.closedAt <= convertDate(to));
+
+    data.filteredArr.map((d)=>{
+        if(d.reviewThreads.length > 0 || d.reviews > 0){
+            data.reviewed ++;
+        }
+    })
 
     const Indicators = () => {
         return <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
@@ -110,16 +134,82 @@ const Organization = ({repos,users}) => {
     <div className="home-body py-5 bg-alice-blue">
         <div className="container">
             <div className="flex-container row">
-                <div className="col-md-4" style={{display:'flex',flexDirection:'column'}}>
-                    <Indicators />
+                <div className="col-md-4">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
-                        <div className="card-body" style={{padding:'35px'}}>
+                        <div className="card-body" style={{padding:'11px'}}>
                             <div className="row">
                                 <div className="pr-cycle-circle">
                                     {data.prs.cycle}
                                 </div>
                                 <div className="pr-cycle">
                                     PR Cycle
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-4">
+                    <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                        <div className="card-body" style={{padding:'11px'}}>
+                            <div className="row">
+                                <div className="pr-cycle-circle">
+                                    {data.resolved}
+                                </div>
+                                <div className="pr-cycle">
+                                    Resolved
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-4">
+                    <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                        <div className="card-body" style={{padding:'11px'}}>
+                            <div className="row">
+                                <div className="pr-cycle-circle">
+                                    {result.count.merged}
+                                </div>
+                                <div className="pr-cycle">
+                                    Prs Merged
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-4" style={{display:'flex',flexDirection:'column'}}>
+                    
+                    <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                        <div className="card-body" style={{padding:'11px'}}>
+                            <div className="row">
+                                <div className="pr-cycle-circle">
+                                    {data.reviews}
+                                </div>
+                                <div className="pr-cycle">
+                                    Review Comments
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                        <div className="card-body" style={{padding:'11px'}}>
+                            <div className="row">
+                                <div className="pr-cycle-circle">
+                                    {data.reviewed}
+                                </div>
+                                <div className="pr-cycle">
+                                    Prs Reviewed
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                        <div className="card-body" style={{padding:'11px'}}>
+                            <div className="row">
+                                <div className="pr-cycle-circle">
+                                    {data.reverts}
+                                </div>
+                                <div className="pr-cycle">
+                                    Commits reverted
                                 </div>
                             </div>
                         </div>
@@ -135,6 +225,7 @@ const Organization = ({repos,users}) => {
                     prs={data.arr}
                     range={[]}
                 />
+                    
             </div>
         </div>
     </div>

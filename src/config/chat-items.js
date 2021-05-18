@@ -3,7 +3,7 @@ import * as charts from '../utils/chart-conversion';
 const defaultArr = [
     {
         name:'Count',
-        option:(res,range)=>charts.getStackedLineForNoOfPrs(res)
+        option:(res,range)=>charts.getBarForNoOfPrs(res)
     },
     {
         name:'Commits',
@@ -193,9 +193,9 @@ const multiArr = [
 
 const topTeamsArr = [
     {
-        name:'Top 5 Teams (PR contributions)',
+        name:'Top 5 Teams (Total PR)',
         key:'count',
-        option:(teams,key)=>charts.getHorizontalStackedBarsForTeams(teams,key),
+        option:(teams,key)=>charts.getHorizontalStackedBarsForTeamsPRCount(teams),
     },
     {
         name:'Top 5 Teams (Commits)',

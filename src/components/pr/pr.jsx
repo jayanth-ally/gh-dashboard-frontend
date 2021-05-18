@@ -10,6 +10,8 @@ import {dateFormat} from '../../utils/time-conversion';
 import {calculatePrsByDate} from '../../utils/pr-calculations';
 import {defaultArr,multiArr} from '../../config/chat-items';
 import * as charts from '../../utils/chart-conversion';
+import { Link } from "react-router-dom";
+import { HOME_ROUTE, PR_ROUTE } from "../../config/routes";
 
 const PR = (props) => {
     const dispatch = useDispatch();
@@ -19,7 +21,10 @@ const PR = (props) => {
     const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
     
     useEffect(()=>{
-        console.log(values);
+        props.setNavKey(props.navKey);
+    },[])
+
+    useEffect(()=>{
     },[values])
     useEffect(()=>{
         if(repo.hasOwnProperty('prs')){
@@ -48,7 +53,6 @@ const PR = (props) => {
                     let prArr = prs;
                     prArr[i] = data.prs;
                     setPrs([...prArr]);
-                    console.log(prArr);
                 }
             })
     }
@@ -100,6 +104,13 @@ const PR = (props) => {
     }
 
     return isLoading?<Loading/>:(<>
+        <div className="breadcrumbs">
+            <Link to={HOME_ROUTE}>Home</Link>
+            <span>/</span>
+            <Link to={PR_ROUTE}>Pull requests</Link>
+            <span>/</span>
+            <span>{props.match.params.owner+"-"+props.match.params.name}</span>
+        </div>
         <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h1 className="h2">{props.match.params.owner+"/"+props.match.params.name}</h1>
             <div className="btn-toolbar mb-2 mb-md-0">

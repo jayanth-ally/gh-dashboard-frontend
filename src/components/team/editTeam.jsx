@@ -1,5 +1,6 @@
 import { useState,useEffect } from "react";
 import { useDispatch,useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 import TagsInput from '../common/tagsInput';
 import Loading from '../loading/loading';
@@ -7,7 +8,7 @@ import Loading from '../loading/loading';
 import * as http from '../../utils/http';
 import {addTeam,updateTeam,clearSelectedTeam} from '../../store/teams/actions';
 
-import {TEAM_ROUTE} from '../../config/routes';
+import {HOME_ROUTE, TEAMS_ROUTE, TEAM_ROUTE} from '../../config/routes';
 
 import './team.css';
 
@@ -95,6 +96,13 @@ const EditTeam = (props) => {
     }
     return isLoading?<Loading/>:(
     <>
+        <div className="breadcrumbs">
+            <Link to={HOME_ROUTE}>Home</Link>
+            <span>/</span>
+            <Link to={TEAMS_ROUTE}>Teams</Link>
+            <span>/</span>
+            <span>{isNew?"Create":"Edit"}</span>
+        </div>
         <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h1 className="h2">{isNew?"Create Team":team.name}</h1>
             <div className="btn-toolbar mb-2 mb-md-0">

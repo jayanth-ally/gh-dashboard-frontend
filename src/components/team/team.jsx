@@ -1,6 +1,8 @@
 import React,{ useState,useEffect, useRef, createRef } from "react";
 import { useDispatch,useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import DatePicker, {DateObject} from "react-multi-date-picker";
+import Collapsible from 'react-collapsible';
 
 import ChartCard from '../common/chartCard/index';
 import Loading from '../loading/loading';
@@ -10,6 +12,10 @@ import {convertDate, convertTimeToDays, dateFormat} from '../../utils/time-conve
 import {defaultArr,multiArr} from '../../config/chat-items';
 import { calculatePrCycle } from "../../utils/pr-calculations";
 import CircleIndicator from "../common/circleIndicator";
+import { selectTeam } from "../../store/teams/actions";
+import { HOME_ROUTE, TEAMS_ROUTE } from "../../config/routes";
+import UserCards from "../user/userCards";
+import { selectUser } from "../../store/users/actions";
 
 const Team = (props) => {
     const dispatch = useDispatch();
@@ -22,10 +28,10 @@ const Team = (props) => {
     const [prs,setPrs] = useState([]);
     const [isLoading,setIsLoading] = useState(false);
     const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
-    
+
     useEffect(()=>{
-        console.log('teams',teams);
-    },[teams])
+        props.setNavKey(props.navKey);
+    },[])
 
     useEffect(()=>{
         if(allTeams.length > 0){
@@ -34,7 +40,7 @@ const Team = (props) => {
                 props.history.goBack();
             }else{
                 const team = allTeams[index];
-                console.log(team);
+                dispatch(selectTeam(team));
                 setTitle(team.name);
                 setTeams([{
                     _id:team._id,
@@ -120,8 +126,6 @@ const Team = (props) => {
             }
         });
         arr[i]=team;
-        console.log('updated teams',arr);
-        console.log('dates',values)
         setTeams([...arr]);
         getAllPrsForTeam(i).then(prSet => {
             let prArr = prs;
@@ -133,13 +137,9 @@ const Team = (props) => {
     const DefaultCharts = () => {
         if(prs.length === 1 && prs[0].length > 0){
             const arr = selectedTeam;
-            const result = calculatePrCycle(prs[0],{
-                from:convertDate(dateFormat(values[0][0])),
-                to:convertDate(dateFormat(values[0][1]))
-            });
-            const cycle = convertTimeToDays(result.timeTaken.avg);
             let commits = 0;
             let count = {
+                arr:[],
                 total:0,
                 open:0,
                 closed:0,
@@ -154,9 +154,64 @@ const Team = (props) => {
                 count.merged += usr.prs.filter((pr)=>pr.state.toUpperCase()==="MERGED").length;
             })
             
+            let from = convertDate(dateFormat(values[0][0]));
+            let to = convertDate(dateFormat(values[0][1]));
+            let result = calculatePrCycle(prs[0],{
+                from,
+                to,
+                prCycle:true,
+            });
+            let data = {
+                commits:0,
+                reverts:0,
+                resolved:0,
+                reviews:0,
+                cycle:convertTimeToDays(result.timeTaken.avg),
+                reviewed:0,
+            }
+            const cycle = data.cycle;
+            data.arr = prs[0].filter((pr) => pr.createdAt >= convertDate(from) && pr.closedAt !== null && pr.closedAt <= convertDate(to));
+            result = calculatePrCycle(data.arr);
+            data.commits = result.commits.total;
+            data.reviews = result.reviews.total;
+            data.reverts = result.commits.reverts;
+            data.resolved = result.count.closed+result.count.merged;
+            data.arr.map((d)=>{
+                if(d.reviewThreads.length > 0 || d.reviews > 0){
+                    data.reviewed ++;
+                }
+            })
+            const onUserClicked = (id) => {
+                const userIndex = users.findIndex((user) => user.id === id);
+                dispatch(selectUser(users[userIndex]));
+                props.history.push('/user/'+id);
+            }
+
             return <>
             <div className="container">
                 <div className="flex-container row">
+                    <div className="col-md-12">
+                        <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                            <div className="card-body">
+                                <Collapsible trigger="Users" open={true}>
+                                    <hr/>
+                                    <div className="all-user-cards bg-alice-blue">
+                                        {selectedTeam.users.map((user,i)=>{
+                                            return <UserCards 
+                                                key={i} 
+                                                size="200px"
+                                                imgSize="40px"
+                                                id={user.id}
+                                                avatar={user.avatarUrl}
+                                                login={user.login}
+                                                selectUser={()=>onUserClicked(user.id)}
+                                            />
+                                        })}
+                                    </div>
+                                </Collapsible>
+                            </div>
+                        </div>
+                    </div>
                     <div className="col-md-6">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="card-body" style={{padding:'35px'}}>
@@ -208,7 +263,7 @@ const Team = (props) => {
                             <div className="card-body" style={{padding:'35px'}}>
                                 <div className="row">
                                     <div className="pr-cycle-circle">
-                                        {commits}
+                                        {data.commits}
                                     </div>
                                     <div className="pr-cycle">
                                         Commits
@@ -253,6 +308,13 @@ const Team = (props) => {
     }
 
     return isLoading?<Loading/>:(<>
+        <div className="breadcrumbs">
+            <Link to={HOME_ROUTE}>Home</Link>
+            <span>/</span>
+            <Link to={TEAMS_ROUTE}>Teams</Link>
+            <span>/</span>
+            <span>{title}</span>
+        </div>
         <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h1 className="h2">{title}</h1>
             <div className="btn-toolbar mb-2 mb-md-0">
