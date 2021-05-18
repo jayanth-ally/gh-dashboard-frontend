@@ -1,11 +1,13 @@
 import { useState,useEffect } from "react";
 import { useDispatch,useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 import UserCards from '../user/userCards';
 import Loading from "../loading/loading";
 
 import * as http from '../../utils/http';
 import {addUsers,selectUser} from '../../store/users/actions';
+import { HOME_ROUTE } from "../../config/routes";
 
 const UserDashboard = (props) => {
     const dispatch = useDispatch();
@@ -14,6 +16,10 @@ const UserDashboard = (props) => {
     const [filter,setFilter] = useState('A-Z');
     const [filteredUsers,setFilteredUsers] = useState([]);
     const [isLoading,setIsLoading] = useState(false);
+
+    useEffect(()=>{
+        props.setNavKey(props.navKey);
+    },[])
 
     useEffect(()=>{
         if(users.length === 0){
@@ -56,6 +62,11 @@ const UserDashboard = (props) => {
 
     return isLoading?<Loading/>:(
         <>
+        <div className="breadcrumbs">
+            <Link to={HOME_ROUTE}>Home</Link>
+            <span>/</span>
+            <span>Users</span>
+        </div>
         <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h1 className="h2">User Dashboard</h1>
             <div className="btn-toolbar mb-2 mb-md-0">

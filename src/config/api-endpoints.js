@@ -1,5 +1,10 @@
+// Heroku
+const HEROKU_URL = "https://ally-ghdashboard-backend.herokuapp.com/api";
+// Localhost
+const LOCALHOST_URL = "http://localhost:5000/api";
+
 // Base url
-const BASE_URL = "https://ally-ghdashboard-backend.herokuapp.com/api";
+const BASE_URL = LOCALHOST_URL
 
 // API end points
 // GET

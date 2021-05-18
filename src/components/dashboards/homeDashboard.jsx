@@ -21,6 +21,16 @@ const HomeDashboard = (props) => {
     const teams = useSelector(state => state.teams.all);
     const [topFiveTeams,setTopFiveTeams] = useState([]);
     const [isLoading,setIsLoading] = useState(false);
+    const [loadingData,setLoadingData] = useState({
+        repo:false,
+        prs:false,
+        users:false,
+        teams:false,
+    });
+    
+    useEffect(()=>{
+        props.setNavKey(props.navKey);
+    },[])
     
     useEffect(()=>{
         loadData();
@@ -32,43 +42,81 @@ const HomeDashboard = (props) => {
         }
     },[teams])
 
+    useEffect(()=>{
+        if(!loadingData.repos && !loadingData.prs && !loadingData.users && !loadingData.teams){
+            setIsLoading(false);
+        }else{
+            setIsLoading(true);
+        }
+    },[loadingData])
+
     const loadData = () => {
         if(repos.length === 0){
-            setIsLoading(true);
+            setLoadingData({
+                ...loadingData,
+                repos:true,
+            })
             http.getRepos().then(({data}) => {
                 dispatch(addRepos(data.repos)); 
+                setLoadingData({
+                    ...loadingData,
+                    repos:false,
+                })
                 data.repos.map((repo,i)=>{
-                    setIsLoading(true);
+                    setLoadingData({
+                        ...loadingData,
+                        prs:true,
+                    })
                     http.getPrsByDate(repo).then(({data}) => {
                         dispatch(addPrs(repo,data.prs));  
                         if(i === repos.length-1){
-                            setIsLoading(false);
+                            setLoadingData({
+                                ...loadingData,
+                                prs:false,
+                            })
                         }
                     },err => {
                         if(i === repos.length-1){
-                            setIsLoading(false);
+                            setLoadingData({
+                                ...loadingData,
+                                prs:false,
+                            })
                         }
                     })
                 })          
             },(err)=>{
-                setIsLoading(false);
+                setLoadingData({
+                    ...loadingData,
+                    repos:false,
+                })
             })
         }
         if(users.length === 0){
-            setIsLoading(true);
+            setLoadingData({
+                ...loadingData,
+                users:true,
+            })
             http.getUsers().then(({data}) => {
                 dispatch(addUsers(data.users));           
                 getAllTeams(data.users);
-                setIsLoading(false);
+                setLoadingData({
+                    ...loadingData,
+                    users:false,
+                })
             },(err)=>{
-                setIsLoading(false);
+                setLoadingData({
+                    ...loadingData,
+                    users:false,
+                })
             })
         }
-        setIsLoading(false);
     }
 
     const getAllTeams = (userArr) => {
-        setIsLoading(true);
+        setLoadingData({
+            ...loadingData,
+            teams:true,
+        })
         http.getTeams().then(async ({data}) => {
             let allTeams = [];
             await Promise.all(data.teams.map( async (team) => {
@@ -76,9 +124,15 @@ const HomeDashboard = (props) => {
                 allTeams = [...allTeams,{..._team}];
             }));
             dispatch(addTeams(allTeams));      
-            setIsLoading(false);
+            setLoadingData({
+                ...loadingData,
+                teams:false,
+            })
         },(err)=>{
-            setIsLoading(false);
+            setLoadingData({
+                ...loadingData,
+                teams:false,
+            })
         })
     }
 
@@ -109,6 +163,9 @@ const HomeDashboard = (props) => {
 
     return isLoading?<Loading/>:(
         <>
+            <div className="breadcrumbs">
+                <span>Home</span>
+            </div>
             <Organization repos={repos} users={users}/>
             <TopTeams teams={topFiveTeams}/>
         </>

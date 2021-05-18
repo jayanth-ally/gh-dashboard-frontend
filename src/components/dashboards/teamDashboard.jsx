@@ -1,5 +1,6 @@
 import { useState,useEffect } from "react";
 import { useDispatch,useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import ReactECharts from 'echarts-for-react';
 import {DateObject} from "react-multi-date-picker"
 
@@ -11,7 +12,8 @@ import {addTeams,deleteTeam,selectTeam,updateTeam} from '../../store/teams/actio
 
 import { 
     CREATE_TEAM_ROUTE,
-    EDIT_TEAM_ROUTE
+    EDIT_TEAM_ROUTE,
+    HOME_ROUTE
 } from '../../config/routes';
 
 import {calculatePrsByDate} from '../../utils/pr-calculations';
@@ -23,6 +25,10 @@ const TeamDashboard = (props) => {
     const teams = useSelector(state => state.teams.all);
     const users = useSelector(state => state.users.all);
     const [isLoading,setIsLoading] = useState(false);
+
+    useEffect(()=>{
+        props.setNavKey(props.navKey);
+    },[])
 
     useEffect(()=>{
         if(users.length === 0){
@@ -97,7 +103,6 @@ const TeamDashboard = (props) => {
             const {data} = await http.getPrsById(d.repo,d.ids);
             prs = [...prs,...data.prs];
         }));
-        console.log(prs);
         return Object.assign({}, team, {prs});
     }
 
@@ -108,6 +113,11 @@ const TeamDashboard = (props) => {
 
     return isLoading?<Loading/>:(
         <>
+        <div className="breadcrumbs">
+            <Link to={HOME_ROUTE}>Home</Link>
+            <span>/</span>
+            <span>Teams</span>
+        </div>
         <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h1 className="h2">Teams</h1>
             <div className="btn-toolbar mb-2 mb-md-0">
@@ -126,7 +136,7 @@ const TeamDashboard = (props) => {
                         if(team.hasOwnProperty('prs')){
                             const resultSet = calculatePrsByDate(team.prs);
                             if(resultSet.count > 0){
-                                graph = <ReactECharts option={charts.getStackedLineForNoOfPrs(team.prs)} />;
+                                graph = <ReactECharts option={charts.getBarForNoOfPrs(team.prs)} />;
                             }
                         }
                         return <div key={index} className="col-md-6">

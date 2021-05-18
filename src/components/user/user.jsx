@@ -1,5 +1,6 @@
 import React,{ useState,useEffect, useRef, createRef } from "react";
 import { useDispatch,useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import DatePicker, {DateObject} from "react-multi-date-picker";
 
 import ChartCard from '../common/chartCard/index';
@@ -9,8 +10,9 @@ import {updateUser} from '../../store/users/actions';
 import * as http from '../../utils/http';
 import {convertDate, convertTimeToDays, dateFormat} from '../../utils/time-conversion';
 import {defaultArr,multiArr} from '../../config/chat-items';
-import { calculatePrCycle } from "../../utils/pr-calculations";
+import { calculateMetrics, calculatePrCycle } from "../../utils/pr-calculations";
 import CircleIndicator from "../common/circleIndicator";
+import { ALL_USERS_ROUTE, HOME_ROUTE } from "../../config/routes";
 
 const User = (props) => {
     const dispatch = useDispatch();
@@ -21,6 +23,10 @@ const User = (props) => {
     const [isLoading,setIsLoading] = useState(false);
     const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
     
+    useEffect(()=>{
+        props.setNavKey(props.navKey);
+    },[])
+
     useEffect(()=>{
         if(!(user.hasOwnProperty('prs'))){
             setIsLoading(true);
@@ -133,12 +139,13 @@ const User = (props) => {
 
     const DefaultCharts = () => {
         if(prs.length === 1 && prs[0].length > 0){
-            const result = calculatePrCycle(prs[0],{
-                from:convertDate(dateFormat(values[0][0])),
-                to:convertDate(dateFormat(values[0][1]))
-            });
+            // const result = calculatePrCycle(prs[0],{
+            //     from:convertDate(dateFormat(values[0][0])),
+            //     to:convertDate(dateFormat(values[0][1]))
+            // });
+            const result = calculateMetrics(prs[0]);
             const cycle = convertTimeToDays(result.timeTaken.avg);
-            const commits = user.commits.total;
+            const commits = result.commits.avg;
 
             const count = {
                 total:user.prs.length,
@@ -244,7 +251,14 @@ const User = (props) => {
         ):<></>;
     }
 
-    return isLoading?<Loading/>:(<>
+    return isLoading || prs.length === 0?<Loading/>:(<>
+        <div className="breadcrumbs">
+            <Link to={HOME_ROUTE}>Home</Link>
+            <span>/</span>
+            <Link to={ALL_USERS_ROUTE}>Users</Link>
+            <span>/</span>
+            <span>{user.login}</span>
+        </div>
         <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <img src={user.avatarUrl} alt="User avatar" style={{width:70,height:70,borderRadius:'50%'}}/>
             <h1 className="h2">{user.login}</h1>
@@ -272,8 +286,11 @@ const User = (props) => {
                     })}
                 </div>
             </div>
-            <DefaultCharts />
-            <MultipleCharts/>
+            {prs[0].length === 0 && <div style={{width:'100%',display:'flex',justifyContent:'center'}}>No PRs found</div>}
+            {prs[0].length > 0 && <>
+                <DefaultCharts />
+                <MultipleCharts/>
+            </>}
         </div>
     </>);
 }

@@ -1,4 +1,5 @@
 import React,{useState} from 'react';
+import {useHistory} from 'react-router-dom';
 import Popup from 'reactjs-popup';
 import ReactECharts from 'echarts-for-react';
 
@@ -8,6 +9,18 @@ import 'reactjs-popup/dist/index.css';
 import './style.css';
 
 const ChartCardComponent = ({item,resultKey,expandOrCompress,expanded,teams=[]}) => {
+    
+    let history = useHistory();
+
+    const onChartClickEvent = (params) => {
+        const id = teams[params.dataIndex].id;
+        history.push('/team/'+id);
+    }
+
+    const onEvents = {
+        'click': onChartClickEvent
+    }
+    
     return <div className={expanded?"col-md-12":"col-md-6"}>
         <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer" style={{marginTop:expanded?'15px':'0'}}>
             <div className="card-head">
@@ -18,7 +31,7 @@ const ChartCardComponent = ({item,resultKey,expandOrCompress,expanded,teams=[]})
                 <hr/>
             </div>
             <div className="card-body">
-                <ReactECharts option={item.option(teams,resultKey)} />
+                <ReactECharts option={item.option(teams,resultKey)} onEvents={onEvents}/>
             </div>
         </div>
     </div>

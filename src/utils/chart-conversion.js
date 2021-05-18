@@ -402,6 +402,86 @@ const formatMultipleTimeTaken = (params,dates) => {
     return html;
 }
 
+const formatPRCountForTopTeams = (params) => {
+    let span = '';
+    let total = 0;
+    params.map((param)=>{
+        const value = param.value;
+        const seriesName = param.seriesName;
+        total += value;
+         span += `
+            <div style="margin:0px 0 0;line-height:2">
+                <span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span>
+                <span style="font-size:14px; color:#666; font-weight:400; margin-left:2px">${seriesName}</span>
+                <span style="float:right; font-size:14px; color:#666; font-weight:900; margin-left:10px">${value}</span>
+            </div>
+            `;
+    })
+    let html = `<div style="margin:0px 0 0;line-height:1">
+        <div style="font-size:14px; color:#666; font-weight:400; margin-left:2px">${params[0].name+' (total: '+total+')'}</div>
+        <div style="margin: 10px 0 0; line-height:1">
+        ${span}
+        </div>
+    </div>`;
+    return html;
+}
+
+const getHorizontalStackedBarsForTeamsPRCount = (teams=[]) => {
+    const key = 'count';
+    if(teams.length === 0 ){
+        return {};
+    }
+
+    let data = ['open','closed','merged'];
+
+    let series = [];
+    data.map((name)=>{
+        series.push({
+            type: 'bar',
+            name,
+            stack: 'total',
+            label: {
+                show: false
+            },
+            emphasis: {
+                focus: 'series'
+            },
+            data:[]
+        })
+    })
+    let teamArr = [];
+    teams.map((team)=>{
+        teamArr.push({id:team._id,value:team.name});
+        let result = team.result;
+
+        data.map((name,i)=>{
+            series[i].data.push(result[key][name]);
+        })
+    })
+    let options = {
+        legend:{
+            data,
+        },
+        grid: { top: 50, right: 20, bottom: 30, left: 50 },
+        xAxis : { 
+          type: 'value',
+        },
+        yAxis : { 
+            type: 'category',
+            data:teamArr,       
+        },
+        series,
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {            // Use axis to trigger tooltip
+            type: 'shadow'        // 'shadow' as default; can also be 'line' or 'shadow'
+            },
+          formatter:(params,t,c)=>formatPRCountForTopTeams(params)
+        },
+      };
+      return options;
+}
+
 const getHorizontalStackedBarsForTeams = (teams=[],key="count") => {
     if(teams.length === 0 ){
         return {};
@@ -420,7 +500,7 @@ const getHorizontalStackedBarsForTeams = (teams=[],key="count") => {
             name,
             stack: 'total',
             label: {
-                show: true
+                show: false
             },
             emphasis: {
                 focus: 'series'
@@ -473,7 +553,7 @@ const getHorizontalStackedBarsForTeams = (teams=[],key="count") => {
       return options;
 }
 
-const formatTimeTakenForTopTeams = (params,ticket,callback) => {
+const formatTimeTakenForTopTeams = (params) => {
 
     let span = '';
     params.map((param)=>{
@@ -505,5 +585,6 @@ export {
     getStackedLineForReverts,
 
     getStackedLinesForMultiplePrs,
-    getHorizontalStackedBarsForTeams
+    getHorizontalStackedBarsForTeamsPRCount,
+    getHorizontalStackedBarsForTeams,
 }

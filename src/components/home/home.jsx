@@ -44,6 +44,7 @@ const Home = (props) => {
     }
 
     useEffect(()=>{
+        console.log(props.location.pathname);
         if(!current.isLogged){
             props.history.replace(LOGIN_ROUTE);
         }else{
@@ -55,7 +56,7 @@ const Home = (props) => {
                 return key;
             })
         }
-    },[])
+    },[props])
 
     const onLinkClicked = (key) => {
         setSelectedLink(key);
@@ -128,15 +129,29 @@ const Home = (props) => {
                 </nav>
                 <main role="main" className="col-md-9 ml-sm-auto col-lg-10 px-4">                    
                     {current.isLogged && <Switch>
-                        <Route path={PR_ROUTE+'/:owner/:name'} component={PR}/>
-                        <Route path={PR_ROUTE} component={PrDashboard}/>
-                        <Route path={USER_ROUTE} component={User}/>
-                        <Route path={ALL_USERS_ROUTE} component={UserDashboard}/>
+                        <Route path={PR_ROUTE+'/:owner/:name'} render={(renderProps)=>{
+                            return <PR {...renderProps} setNavKey={onLinkClicked} navKey="pr"/>
+                        }}/>
+                        <Route path={PR_ROUTE} render={(renderProps)=>{
+                            return <PrDashboard {...renderProps} setNavKey={onLinkClicked} navKey="pr"/>
+                        }}/>
+                        <Route path={USER_ROUTE} render={(renderProps)=>{
+                            return <User {...renderProps} setNavKey={onLinkClicked} navKey="users"/>
+                        }}/>
+                        <Route path={ALL_USERS_ROUTE} render={(renderProps)=>{
+                            return <UserDashboard {...renderProps} setNavKey={onLinkClicked} navKey="users"/>
+                        }}/>
                         <Route path={CREATE_TEAM_ROUTE} component={EditTeam}/>
                         <Route path={EDIT_TEAM_ROUTE} component={EditTeam}/>
-                        <Route path={TEAMS_ROUTE} component={TeamDashboard}/>
-                        <Route path={TEAM_ROUTE} component={Team}/>
-                        <Route path={HOME_ROUTE} exact component={HomeDashboard}/>
+                        <Route path={TEAMS_ROUTE} render={(renderProps)=>{
+                            return <TeamDashboard {...renderProps} setNavKey={onLinkClicked} navKey="manageTeam"/>
+                        }}/>
+                        <Route path={TEAM_ROUTE} render={(renderProps)=>{
+                            return <Team {...renderProps} setNavKey={onLinkClicked} navKey="manageTeam"/>
+                        }}/>
+                        <Route path={HOME_ROUTE} exact render={(renderProps)=>{
+                            return <HomeDashboard {...renderProps} setNavKey={onLinkClicked} navKey="home"/>
+                        }}/>
                         <Redirect to={HOME_ROUTE} />
                     </Switch>}
                 </main>
