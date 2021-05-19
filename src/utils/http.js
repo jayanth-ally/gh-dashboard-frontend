@@ -43,6 +43,11 @@ const getPrsById = async (repo,ids) => {
     return res;
 }
 
+const getPrDetailsById = async (ids) => {
+    const res = await axios.post(endpoint.GET_PR_DETAILS_BY_ID,{ids});
+    return res;
+}
+
 const getPrsByNumber = async (repo,numbers) => {
     const res = await axios.post(endpoint.GET_PRS_BY_NUMBER,{repo,numbers});
     return res;
@@ -75,6 +80,7 @@ export {
     getUsersById,
     getPrsByDate,
     getPrsById,
+    getPrDetailsById,
     getPrsByNumber,
     getTeams,
     getTeamsById,

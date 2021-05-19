@@ -1,4 +1,4 @@
-import {convertDate,getNextDate,getPreviousDate} from './time-conversion';
+import {convertDate,convertTimeToDays,getNextDate,getPreviousDate} from './time-conversion';
 
 const calculatePrsByDate = (prs,options={}) => {
     if(prs.length === 0){
@@ -117,7 +117,9 @@ const calculateMetrics = (prs,options={}) => {
                 max:0,
                 maxFile:{},
                 avgAdditions:0,
-                avgDeletions:0
+                totalAdditions:0,
+                avgDeletions:0,
+                totalDeletions:0
             }
         };
     }
@@ -171,7 +173,9 @@ const calculateMetrics = (prs,options={}) => {
             max:files.value,
             maxFile:files.file,
             avgAdditions:ParseFloat(files.avgAdditions),
-            avgDeletions:ParseFloat(files.avgDeletions)
+            totalAdditions:files.totalAdditions,
+            avgDeletions:ParseFloat(files.avgDeletions),
+            totalDeletions:files.totalDeletions
         }
     };
     return result;
@@ -240,9 +244,7 @@ const calculatePrFiles = (prs) => {
             fileWithMaxCount = file;
         }
     })
-    avgAdditions /= totalFiles;
-    avgDeletions /= totalFiles;
-    return [avg,avg/total,{value:max,pr:maxPr},{value:maxFileCount,file:fileWithMaxCount,total:files.length,avgAdditions,avgDeletions}];
+    return [avg,avg/total,{value:max,pr:maxPr},{value:maxFileCount,file:fileWithMaxCount,total:files.length,avgAdditions:avgAdditions/totalFiles,totalAdditions:avgAdditions,avgDeletions:avgDeletions/totalFiles,totalDeletions:avgDeletions}];
 }
 
 const calculatePrCommits = (prs) => {
@@ -346,10 +348,19 @@ const calculatePrTimeTaken = (prs,options={}) => {
 
 const getTopFiveTeams = (teams,metric="count") => {
     let arr = [];
+    let innerKey = "total";
+    if(metric === "timeTaken"){
+        innerKey = "avg";
+    }
     teams.map((team)=>{ 
-        arr.push({id:team._id,name:team.name,result:calculateMetrics(team.prs)});
+        let result = calculateMetrics(team.prs);
+        if(metric === "timeTaken"){
+            result = calculatePrCycle(team.prs,{prCycle:true});
+            console.log(convertTimeToDays(result.timeTaken.avg));
+        }
+        arr.push({id:team._id,name:team.name,result});
     })
-    arr = arr.sort((a,b)=>(a.result[metric].total < b.result[metric].total)?1:(a.result[metric].total > b.result[metric].total)?-1:0);
+    arr = arr.sort((a,b)=>(a.result[metric][innerKey] < b.result[metric][innerKey])?1:(a.result[metric][innerKey] > b.result[metric][innerKey])?-1:0);
     let topArr = [];
     arr.map((team,i)=>{
         if(i<5){
@@ -384,7 +395,7 @@ const calculatePrCycle = (prs,options={}) => {
         timeTaken = 14400;
     }
 
-    const arr = prs.filter((pr) => pr.createdAt >= convertDate(from) && pr.closedAt !== null && pr.closedAt <= convertDate(to) && pr.timeTaken > timeTaken);
+    const arr = prs.filter((pr) => pr.updatedAt >= convertDate(from) && pr.closedAt !== null && pr.closedAt <= convertDate(to) && pr.timeTaken > timeTaken);
     return calculateMetrics(arr);
 }
 
@@ -449,5 +460,6 @@ export {
     calculateMetrics,
     getTopFiveTeams,
     calculatePrCycle,
+    calculatePrTimeTaken,
     getQuery
 }

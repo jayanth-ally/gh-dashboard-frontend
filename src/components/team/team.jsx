@@ -10,7 +10,7 @@ import Loading from '../loading/loading';
 import * as http from '../../utils/http';
 import {convertDate, convertTimeToDays, dateFormat} from '../../utils/time-conversion';
 import {defaultArr,multiArr} from '../../config/chat-items';
-import { calculatePrCycle } from "../../utils/pr-calculations";
+import { calculatePrCycle, calculatePrTimeTaken } from "../../utils/pr-calculations";
 import CircleIndicator from "../common/circleIndicator";
 import { selectTeam } from "../../store/teams/actions";
 import { HOME_ROUTE, TEAMS_ROUTE } from "../../config/routes";
@@ -145,6 +145,7 @@ const Team = (props) => {
                 closed:0,
                 merged:0
             }
+            let allPrs = [];
             arr.users.map((u) => {
                 const usr = users.filter((usr) => usr.id === u.id)[0];
                 commits += usr.commits.total;
@@ -152,6 +153,7 @@ const Team = (props) => {
                 count.open += usr.prs.filter((pr)=>pr.state.toUpperCase()==="OPEN").length;
                 count.closed += usr.prs.filter((pr)=>pr.state.toUpperCase()==="CLOSED").length;
                 count.merged += usr.prs.filter((pr)=>pr.state.toUpperCase()==="MERGED").length;
+                allPrs = [...allPrs,...usr.prs];
             })
             
             let from = convertDate(dateFormat(values[0][0]));
@@ -161,16 +163,19 @@ const Team = (props) => {
                 to,
                 prCycle:true,
             });
+            let prForCycle = allPrs.filter((p)=> p.timeTaken > 14400);
+            let [totalTimeTaken,avgTimeTaken,maxTimeTaken] = calculatePrTimeTaken(prForCycle);
             let data = {
                 commits:0,
                 reverts:0,
                 resolved:0,
                 reviews:0,
+                avgCycle:convertTimeToDays(avgTimeTaken),
                 cycle:convertTimeToDays(result.timeTaken.avg),
                 reviewed:0,
             }
             const cycle = data.cycle;
-            data.arr = prs[0].filter((pr) => pr.createdAt >= convertDate(from) && pr.closedAt !== null && pr.closedAt <= convertDate(to));
+            data.arr = prs[0];
             result = calculatePrCycle(data.arr);
             data.commits = result.commits.total;
             data.reviews = result.reviews.total;
@@ -247,11 +252,16 @@ const Team = (props) => {
                     <div className="col-md-3">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="card-body" style={{padding:'35px'}}>
-                                <div className="row">
+                                <div className={data.avgCycle > cycle?"row pr-cycle red":"row pr-cycle green"}>
                                     <div className="pr-cycle-circle">
-                                        {cycle}
+                                        <span className="old-data">
+                                            {data.avgCycle}
+                                        </span>
+                                        <span className="new-data">
+                                            {cycle}
+                                        </span>
                                     </div>
-                                    <div className="pr-cycle">
+                                    <div className="pr-cycle-title">
                                         PR Cycle
                                     </div>
                                 </div>
@@ -261,11 +271,11 @@ const Team = (props) => {
                     <div className="col-md-3">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="card-body" style={{padding:'35px'}}>
-                                <div className="row">
+                                <div className="row pr-cycle">
                                     <div className="pr-cycle-circle">
                                         {data.resolved}
                                     </div>
-                                    <div className="pr-cycle">
+                                    <div className="pr-cycle-title">
                                         Resolved
                                     </div>
                                 </div>

@@ -23,7 +23,7 @@ const convertTimeToDays = (seconds) => {
     const [days,hours,minutes,milliseconds] = msToDHM(seconds*1000);
     if(days > 0 || hours >0){
         return days+'.'+Math.ceil((hours*10)/24)+' day(s)';
-    }else if(days == 0 && hours >0){
+    }else if(days === 0 && hours >0){
         return '0.'+Math.ceil((minutes*10)/60)+' hour(s)';
     }else{
         return '0.'+minutes+' min(s)';

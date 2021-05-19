@@ -201,6 +201,16 @@ const topTeamsArr = [
         name:'Top 5 Teams (Commits)',
         key:'commits',
         option:(teams,key)=>charts.getHorizontalStackedBarsForTeams(teams,key),
+    },
+    {
+        name:'Top 5 Teams (Review Comments)',
+        key:'reviews',
+        option:(teams,key)=>charts.getHorizontalStackedBarsForTeams(teams,key),
+    },
+    {
+        name:'Top 5 Teams (PR Cycle)',
+        key:'timeTaken',
+        option:(teams,key)=>charts.getHorizontalStackedBarsForTeamsPRCycle(teams,key),
     }
 ]
 
@@ -214,10 +224,16 @@ const prsLastDay = {
     option:(prs,range,teams)=>charts.getBarForNoOfPrs(prs),
 }
 
+const prsPreviousWeek = {
+    name:'PR in previous week',
+    option:(prs,range,teams)=>charts.getBarForNoOfPrs(prs),
+}
+
 export {
     defaultArr,
     multiArr,
     topTeamsArr,
     prsLastWeek,
-    prsLastDay
+    prsLastDay,
+    prsPreviousWeek
 }

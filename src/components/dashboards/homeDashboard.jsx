@@ -8,7 +8,7 @@ import Organization from './home/organization';
 
 import * as http from '../../utils/http';
 import {convertDate,dateFormat} from '../../utils/time-conversion';
-import {addRepos,addPrs} from '../../store/repos/actions';
+import {addRepos,addPrs, addPastPrs} from '../../store/repos/actions';
 import {addUsers} from '../../store/users/actions';
 import {addTeams} from '../../store/teams/actions';
 import TopTeams from "./home/topTeams";
@@ -31,7 +31,7 @@ const HomeDashboard = (props) => {
     useEffect(()=>{
         props.setNavKey(props.navKey);
     },[])
-    
+
     useEffect(()=>{
         loadData();
     },[dispatch])
@@ -69,6 +69,27 @@ const HomeDashboard = (props) => {
                     })
                     http.getPrsByDate(repo).then(({data}) => {
                         dispatch(addPrs(repo,data.prs));  
+                        if(i === repos.length-1){
+                            setLoadingData({
+                                ...loadingData,
+                                prs:false,
+                            })
+                        }
+                    },err => {
+                        if(i === repos.length-1){
+                            setLoadingData({
+                                ...loadingData,
+                                prs:false,
+                            })
+                        }
+                    })
+
+                    let from = new Date();
+                    let to = new Date();
+                    to.setDate(from.getDate() - 7);
+                    from.setDate(to.getDate() - 6);
+                    http.getPrsByDate(repo,{from:convertDate(from),to:convertDate(to)}).then(({data}) => {
+                        dispatch(addPastPrs(repo,data.prs));  
                         if(i === repos.length-1){
                             setLoadingData({
                                 ...loadingData,
@@ -167,7 +188,7 @@ const HomeDashboard = (props) => {
                 <span>Home</span>
             </div>
             <Organization repos={repos} users={users}/>
-            <TopTeams teams={topFiveTeams}/>
+            <TopTeams teams={teams}/>
         </>
     );
 }

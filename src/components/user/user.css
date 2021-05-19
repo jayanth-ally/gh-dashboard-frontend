@@ -17,3 +17,43 @@
     display: flex;
     justify-content: space-evenly;
 }
+
+.pr-title a:hover{
+    color:#13ce95 !important;
+}
+
+.pr-status{
+    padding:5px;
+    border-radius: 5px;
+    display: inline;
+    color:white;
+}
+
+.pr-status.OPEN{
+    background-color: #13ce95;
+}
+
+.pr-status.CLOSED, .pr-status.FAILED{
+    background-color: #EF7070;
+}
+
+.pr-status.MERGED{
+    background-color: #6f42c1;
+}
+.pr-changes{
+    width: 100px;
+}
+
+.pr-changes span{
+    color: white;
+    padding:5px;
+}
+
+.pr-changes .additions{
+    background-color: #13ce95;
+    border-radius: 10px 0 0 10px;
+}
+.pr-changes .deletions{
+    background-color: #EF7070;
+    border-radius: 0px 10px 10px 0px;
+}

@@ -1,6 +1,7 @@
 .pr-cycle-circle{
     display: flex;
     justify-content: center;
+    flex-direction: column;
     align-items: center;
     width: 100px;
     height: 100px;
@@ -8,7 +9,7 @@
     border: 2px solid #f36f21;
 }
 
-.pr-cycle{
+.pr-cycle-title{
     display: flex;
     justify-content: center;
     align-items: center;
@@ -16,5 +17,27 @@
     height: 100px;
     font-size: 20px;
     font-weight: 600;
+}
+
+.pr-cycle{
     color: #f36f21;
+}
+
+.pr-cycle.red{
+    color:#EF7070;
+}
+.pr-cycle.red .pr-cycle-circle{
+    border: 2px solid #EF7070;
+}
+
+.pr-cycle.green{
+    color: #13ce95;
+}
+.pr-cycle.green .pr-cycle-circle{
+    border: 2px solid #13ce95;
+}
+
+.pr-cycle-circle .old-data{
+    color:gray;
+    font-size: 12px;
 }
