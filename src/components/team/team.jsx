@@ -193,7 +193,7 @@ const Team = (props) => {
                     <div className="col-md-12">
                         <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="card-body">
-                                <Collapsible trigger="Users" open={true}>
+                                <Collapsible trigger="Users">
                                     <hr/>
                                     <div className="all-user-cards bg-alice-blue">
                                         {selectedTeam.users.map((user,i)=>{
@@ -263,10 +263,10 @@ const Team = (props) => {
                             <div className="card-body" style={{padding:'35px'}}>
                                 <div className="row">
                                     <div className="pr-cycle-circle">
-                                        {data.commits}
+                                        {data.resolved}
                                     </div>
                                     <div className="pr-cycle">
-                                        Commits
+                                        Resolved
                                     </div>
                                 </div>
                             </div>
