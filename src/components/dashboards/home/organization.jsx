@@ -203,7 +203,7 @@ const Organization = ({repos,users}) => {
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                         <div className="card-body" style={{padding:'11px'}}>
-                            <div className={pastDataObj.prs.cycle > data.prs.cycle?"row pr-cycle red":"row pr-cycle green"}>
+                            <div className={pastDataObj.prs.cycle < data.prs.cycle?"row pr-cycle red":"row pr-cycle green"}>
                                 <div className="pr-cycle-circle">
                                     <div className="old-data">
                                         {pastData.prs.cycle}

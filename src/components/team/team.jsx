@@ -252,7 +252,7 @@ const Team = (props) => {
                     <div className="col-md-3">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="card-body" style={{padding:'35px'}}>
-                                <div className={data.avgCycle > cycle?"row pr-cycle red":"row pr-cycle green"}>
+                                <div className={data.avgCycle < cycle?"row pr-cycle red":"row pr-cycle green"}>
                                     <div className="pr-cycle-circle">
                                         <span className="old-data">
                                             {data.avgCycle}
