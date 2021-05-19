@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import TopChartCard from '../../common/chartCard/topChartCard';
+import Loading from '../../loading/loading';
 
 import {topTeamsArr} from '../../../config/chat-items';
 

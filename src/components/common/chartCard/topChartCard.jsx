@@ -4,6 +4,7 @@ import Popup from 'reactjs-popup';
 import ReactECharts from 'echarts-for-react';
 
 import {expand,compress} from '../../../assets/svg/index';
+import Loading from '../../loading/loading';
 
 import 'reactjs-popup/dist/index.css';
 import './style.css';
@@ -12,12 +13,13 @@ import { getTopFiveTeams } from '../../../utils/pr-calculations';
 const ChartCardComponent = ({item,resultKey,expandOrCompress,expanded,teams=[]}) => {
     
     let history = useHistory();
-    const [sortedTeams,setSortedTeams] = useState([]);
+    // const [sortedTeams,setSortedTeams] = useState([]);
 
-    useEffect(()=>{
-        let teamArr = getTopFiveTeams(teams,resultKey);
-        setSortedTeams([...teamArr]);
-    },[])
+    // useEffect(()=>{
+    //     let teamArr = getTopFiveTeams(teams,resultKey);
+    //     setSortedTeams([...teamArr]);
+    // },[teams])
+    let sortedTeams = getTopFiveTeams(teams,resultKey);
 
     const onChartClickEvent = (params) => {
         const id = sortedTeams[params.dataIndex].id;
@@ -30,7 +32,9 @@ const ChartCardComponent = ({item,resultKey,expandOrCompress,expanded,teams=[]})
     
     return <div className={expanded?"col-md-12":"col-md-6"}>
         <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer" style={{marginTop:expanded?'15px':'0'}}>
-            <div className="card-head">
+            {teams.length === 0 && <Loading/>}
+            {teams.length > 0 && <>
+                <div className="card-head">
                 <div style={{display:'flex',flexWrap:'wrap',justifyContent:'space-between',padding:'0 20px'}}>
                     <h3 className="h3-text">{item.name}</h3>
                     <span style={{width:'25px',height:'25px'}} onClick={expandOrCompress}><img src={expanded?compress:expand} alt="min-max" width="15px" height="15px" /></span>
@@ -40,6 +44,7 @@ const ChartCardComponent = ({item,resultKey,expandOrCompress,expanded,teams=[]})
             <div className="card-body">
                 <ReactECharts option={item.option(sortedTeams,resultKey)} onEvents={onEvents}/>
             </div>
+            </>}
         </div>
     </div>
 }
