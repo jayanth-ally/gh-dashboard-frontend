@@ -2,6 +2,7 @@ import React,{ useState,useEffect, useRef, createRef } from "react";
 import { useDispatch,useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import DatePicker, {DateObject} from "react-multi-date-picker";
+import Collapsible from 'react-collapsible';
 
 import ChartCard from '../common/chartCard/index';
 import Loading from '../loading/loading';
@@ -52,6 +53,7 @@ const User = (props) => {
         if(users.length > 0 && prs.length === 0){
             getAllPrsForUser(0).then(prSet => {
                 setPrs([prSet]);
+                console.log(prSet)
             })
         }
     },[users])
@@ -143,9 +145,6 @@ const User = (props) => {
             //     from:convertDate(dateFormat(values[0][0])),
             //     to:convertDate(dateFormat(values[0][1]))
             // });
-            const result = calculateMetrics(prs[0]);
-            const cycle = convertTimeToDays(result.timeTaken.avg);
-            const commits = result.commits.avg;
 
             const count = {
                 total:user.prs.length,
@@ -153,9 +152,39 @@ const User = (props) => {
                 closed:user.prs.filter((u)=>u.state.toUpperCase()==="CLOSED").length,
                 merged:user.prs.filter((u)=>u.state.toUpperCase()==="MERGED").length
             }
+
+            let from = convertDate(dateFormat(values[0][0]));
+            let to = convertDate(dateFormat(values[0][1]));
+            let result = calculatePrCycle(prs[0],{
+                from,
+                to,
+                prCycle:true,
+            });
+            let data = {
+                commits:0,
+                reverts:0,
+                resolved:0,
+                reviews:0,
+                cycle:convertTimeToDays(result.timeTaken.avg),
+                reviewed:0,
+            }
+            const cycle = data.cycle;
+            data.arr = prs[0].filter((pr) => pr.createdAt >= convertDate(from) && pr.closedAt !== null && pr.closedAt <= convertDate(to));
+            result = calculatePrCycle(data.arr);
+            data.commits = result.commits.total;
+            data.reviews = result.reviews.total;
+            data.reverts = result.commits.reverts;
+            data.resolved = result.count.closed+result.count.merged;
+            data.arr.map((d)=>{
+                if(d.reviewThreads.length > 0 || d.reviews > 0){
+                    data.reviewed ++;
+                }
+            })
+
             return <>
             <div className="container">
                 <div className="flex-container row">
+                    
                     <div className="col-md-6">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="card-body" style={{padding:'35px'}}>
@@ -207,10 +236,10 @@ const User = (props) => {
                             <div className="card-body" style={{padding:'35px'}}>
                                 <div className="row">
                                     <div className="pr-cycle-circle">
-                                        {commits}
+                                        {data.resolved}
                                     </div>
                                     <div className="pr-cycle">
-                                        Commits
+                                        Resolved
                                     </div>
                                 </div>
                             </div>
