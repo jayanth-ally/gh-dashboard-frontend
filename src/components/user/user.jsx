@@ -7,13 +7,15 @@ import Collapsible from 'react-collapsible';
 import ChartCard from '../common/chartCard/index';
 import Loading from '../loading/loading';
 
-import {updateUser} from '../../store/users/actions';
+import {selectUser, updateUser} from '../../store/users/actions';
 import * as http from '../../utils/http';
 import {convertDate, convertTimeToDays, dateFormat} from '../../utils/time-conversion';
 import {defaultArr,multiArr} from '../../config/chat-items';
-import { calculateMetrics, calculatePrCycle } from "../../utils/pr-calculations";
+import { calculateMetrics, calculatePrCycle, calculatePrTimeTaken } from "../../utils/pr-calculations";
 import CircleIndicator from "../common/circleIndicator";
 import { ALL_USERS_ROUTE, HOME_ROUTE } from "../../config/routes";
+
+import './user.css';
 
 const User = (props) => {
     const dispatch = useDispatch();
@@ -21,12 +23,25 @@ const User = (props) => {
     const allUsers = useSelector(state => state.users.all || []);
     const [users,setUsers] = useState([]);
     const [prs,setPrs] = useState([]);
+    const [prTable,setPrTable] = useState([]);
     const [isLoading,setIsLoading] = useState(false);
     const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
     
     useEffect(()=>{
         props.setNavKey(props.navKey);
     },[])
+
+    useEffect(()=>{
+        if(allUsers.length > 0){
+            const index = allUsers.findIndex((t) => t.id === props.match.params.id);
+            if(index === -1){
+                props.history.goBack();
+            }else{
+                const usr = allUsers[index];
+                dispatch(selectUser(usr));
+            }
+        }
+    },[allUsers])
 
     useEffect(()=>{
         if(!(user.hasOwnProperty('prs'))){
@@ -57,6 +72,23 @@ const User = (props) => {
             })
         }
     },[users])
+
+    useEffect(()=>{
+        let ids = "[";
+        if(prs.length > 0){
+            prs[0].map((pr,i) => {
+                if(i !== prs[0].length-1){
+                    ids += "\""+pr.id+"\",";
+                }else{
+                    ids += "\""+pr.id+"\"";
+                }
+            })
+            ids += "]"
+            http.getPrDetailsById(ids).then(({data})=>{
+                setPrTable([...data.prs]);
+            })
+        }
+    },[prs])
 
     const getAllPrsForUser = async (userIndex) => {
         let usr = allUsers.filter((u) => u.id === users[userIndex].id)[0];
@@ -160,17 +192,20 @@ const User = (props) => {
                 to,
                 prCycle:true,
             });
+            let prForCycle = user.prs.filter((p)=> p.timeTaken > 14400);
+            let [totalTimeTaken,avgTimeTaken,maxTimeTaken] = calculatePrTimeTaken(prForCycle);
             let data = {
                 commits:0,
                 reverts:0,
                 resolved:0,
                 reviews:0,
+                avgCycle:convertTimeToDays(avgTimeTaken),
                 cycle:convertTimeToDays(result.timeTaken.avg),
                 reviewed:0,
             }
             const cycle = data.cycle;
-            data.arr = prs[0].filter((pr) => pr.createdAt >= convertDate(from) && pr.closedAt !== null && pr.closedAt <= convertDate(to));
-            result = calculatePrCycle(data.arr);
+            data.arr = prs[0];
+            result = calculateMetrics(data.arr);
             data.commits = result.commits.total;
             data.reviews = result.reviews.total;
             data.reverts = result.commits.reverts;
@@ -184,7 +219,59 @@ const User = (props) => {
             return <>
             <div className="container">
                 <div className="flex-container row">
-                    
+                    <div className="col-md-12">
+                        <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                            <div className="card-body">
+                                <Collapsible trigger={"Pull Requests ("+prs[0].length+")"}>
+                                    <hr/>
+                                    <table className="table pr-table">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Title</th>
+                                                <th>Status</th>
+                                                <th>Time (to close)</th>
+                                                <th>Changes</th>
+                                                <th>Comments</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+
+                                        {prTable.map((pr,i)=>{
+                                            return  <tr key={i}>
+                                                <td>{pr.number}</td>
+                                                <td>
+                                                    <div className="pr-title">
+                                                        <a href={"https://github.com/"+pr.repo.owner+"/"+pr.repo.name+"/pull/"+pr.number} target="_blank">
+                                                        {pr.title}
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className={"pr-status "+pr.state}>
+                                                        {pr.state}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className="pr-days">
+                                                        {convertTimeToDays(pr.timeTaken) === "0.0 min(s)"?"-":convertTimeToDays(pr.timeTaken)}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className="pr-changes mr-2">
+                                                        <span className="additions">{pr.additions}</span>
+                                                        <span className="deletions">{pr.deletions}</span>
+                                                    </div>
+                                                </td>
+                                                <td>{pr.reviewComments}</td>
+                                            </tr>
+                                        })}
+                                        </tbody>
+                                    </table>
+                                </Collapsible>
+                            </div>
+                        </div>
+                    </div>
                     <div className="col-md-6">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="card-body" style={{padding:'35px'}}>
@@ -220,11 +307,16 @@ const User = (props) => {
                     <div className="col-md-3">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="card-body" style={{padding:'35px'}}>
-                                <div className="row">
+                                <div className={data.avgCycle > cycle?"row pr-cycle red":"row pr-cycle green"}>
                                     <div className="pr-cycle-circle">
-                                        {cycle}
+                                        <span className="old-data">
+                                            {data.avgCycle}
+                                        </span>
+                                        <span className="new-data">
+                                            {cycle}
+                                        </span>
                                     </div>
-                                    <div className="pr-cycle">
+                                    <div className="pr-cycle-title">
                                         PR Cycle
                                     </div>
                                 </div>
@@ -234,11 +326,11 @@ const User = (props) => {
                     <div className="col-md-3">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="card-body" style={{padding:'35px'}}>
-                                <div className="row">
+                                <div className="row pr-cycle">
                                     <div className="pr-cycle-circle">
                                         {data.resolved}
                                     </div>
-                                    <div className="pr-cycle">
+                                    <div className="pr-cycle-title">
                                         Resolved
                                     </div>
                                 </div>

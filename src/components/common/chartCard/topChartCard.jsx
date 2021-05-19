@@ -1,4 +1,4 @@
-import React,{useState} from 'react';
+import React,{useEffect, useState} from 'react';
 import {useHistory} from 'react-router-dom';
 import Popup from 'reactjs-popup';
 import ReactECharts from 'echarts-for-react';
@@ -7,13 +7,20 @@ import {expand,compress} from '../../../assets/svg/index';
 
 import 'reactjs-popup/dist/index.css';
 import './style.css';
+import { getTopFiveTeams } from '../../../utils/pr-calculations';
 
 const ChartCardComponent = ({item,resultKey,expandOrCompress,expanded,teams=[]}) => {
     
     let history = useHistory();
+    const [sortedTeams,setSortedTeams] = useState([]);
+
+    useEffect(()=>{
+        let teamArr = getTopFiveTeams(teams,resultKey);
+        setSortedTeams([...teamArr]);
+    },[])
 
     const onChartClickEvent = (params) => {
-        const id = teams[params.dataIndex].id;
+        const id = sortedTeams[params.dataIndex].id;
         history.push('/team/'+id);
     }
 
@@ -31,7 +38,7 @@ const ChartCardComponent = ({item,resultKey,expandOrCompress,expanded,teams=[]})
                 <hr/>
             </div>
             <div className="card-body">
-                <ReactECharts option={item.option(teams,resultKey)} onEvents={onEvents}/>
+                <ReactECharts option={item.option(sortedTeams,resultKey)} onEvents={onEvents}/>
             </div>
         </div>
     </div>

@@ -4,7 +4,7 @@ const HEROKU_URL = "https://ally-ghdashboard-backend.herokuapp.com/api";
 const LOCALHOST_URL = "http://localhost:5000/api";
 
 // Base url
-const BASE_URL = LOCALHOST_URL
+const BASE_URL = HEROKU_URL;
 
 // API end points
 // GET
@@ -28,6 +28,7 @@ const GET_USERS_BY_ID = BASE_URL + "/users";
 const GET_PRS_BY_DATE = BASE_URL + "/pulls";
 // ids:[id]
 const GET_PRS_BY_ID = BASE_URL + "/pulls/ids";
+const GET_PR_DETAILS_BY_ID = BASE_URL + "/prs/ids";
 // numbers:[number]
 const GET_PRS_BY_NUMBER = BASE_URL + "/pulls";
 // ids:[id]
@@ -50,6 +51,7 @@ export {
     LOGOUT_USER,
     GET_PRS_BY_DATE,
     GET_PRS_BY_ID,
+    GET_PR_DETAILS_BY_ID,
     GET_PRS_BY_NUMBER,
     GET_ALL_TEAMS,
     GET_TEAMS_BY_ID,

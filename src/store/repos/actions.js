@@ -7,6 +7,7 @@ const selectRepoAction = createAction("repos/SELECT_REPO");
 const clearSelectedRepoAction = createAction("repos/CLEAR_SELECTED_REPO");
 
 const addPrsAction = createAction("repo/ADD_PRS");
+const addPastPrsAction = createAction("repo/ADD_PAST_PRS");
 const clearPrsAction = createAction("repo/CLEAR_PRS");
 
 const addRepos = (repos) => {
@@ -49,6 +50,16 @@ const addPrs = (repo,prs) => {
     }
 }
 
+const addPastPrs = (repo,prs) => {
+    return {
+        type:addPastPrsAction.type,
+        payload:{
+            repo,
+            prs
+        }
+    }
+}
+
 const clearPrs = () => {
     return {
         type:clearPrsAction.type,
@@ -62,11 +73,13 @@ export {
     selectRepoAction,
     clearSelectedRepoAction,
     addPrsAction,
+    addPastPrsAction,
     clearPrsAction,
     addRepos,
     clearRepos,
     selectRepo,
     clearSelectedRepo,
     addPrs,
+    addPastPrs,
     clearPrs,
 }
