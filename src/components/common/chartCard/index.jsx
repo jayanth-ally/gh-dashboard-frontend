@@ -3,6 +3,7 @@ import Popup from 'reactjs-popup';
 import ReactECharts from 'echarts-for-react';
 
 import {expand,compress} from '../../../assets/svg/index';
+import Loading from "../../loading/loading";
 
 import 'reactjs-popup/dist/index.css';
 import './style.css';
@@ -10,7 +11,9 @@ import './style.css';
 const ChartCardComponent = ({item,range,expandOrCompress,prs,expanded,teams=[]}) => {
     return <div className={expanded?"col-md-12":"col-md-4"}>
         <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer" style={{marginTop:expanded?'15px':'0'}}>
-            <div className="card-head">
+            {prs.length === 0 && <Loading/>}
+            {prs.length > 0 && <>
+                <div className="card-head">
                 <div style={{display:'flex',flexWrap:'wrap',justifyContent:'space-between',padding:'0 20px'}}>
                     <h3 className="h3-text">{item.name}</h3>
                     <span style={{width:'25px',height:'25px'}} onClick={expandOrCompress}><img src={expanded?compress:expand} alt="min-max" width="15px" height="15px" /></span>
@@ -20,6 +23,7 @@ const ChartCardComponent = ({item,range,expandOrCompress,prs,expanded,teams=[]})
             <div className="card-body">
                 <ReactECharts option={item.option(prs,range,teams)} />
             </div>
+            </>}
         </div>
     </div>
 }

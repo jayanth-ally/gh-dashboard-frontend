@@ -13,6 +13,7 @@ import {addUsers} from '../../store/users/actions';
 import {addTeams} from '../../store/teams/actions';
 import TopTeams from "./home/topTeams";
 import { getTopFiveTeams } from "../../utils/pr-calculations";
+import { HOME_ROUTE } from "../../config/routes";
 
 const HomeDashboard = (props) => {
     const dispatch = useDispatch();
@@ -38,7 +39,7 @@ const HomeDashboard = (props) => {
 
     useEffect(()=>{
         if(teams.length>0){
-            setTopFiveTeams(getTopFiveTeams(teams));
+            props.history.replace(HOME_ROUTE);
         }
     },[teams])
 
