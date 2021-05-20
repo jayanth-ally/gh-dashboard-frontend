@@ -3,6 +3,7 @@ import { useDispatch,useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import DatePicker, {DateObject} from "react-multi-date-picker";
 import Collapsible from 'react-collapsible';
+import ReactTooltip from 'react-tooltip';
 
 import ChartCard from '../common/chartCard/index';
 import Loading from '../loading/loading';
@@ -11,9 +12,11 @@ import {selectUser, updateUser} from '../../store/users/actions';
 import * as http from '../../utils/http';
 import {convertDate, convertTimeToDays, dateFormat} from '../../utils/time-conversion';
 import {defaultArr,multiArr} from '../../config/chat-items';
-import { calculateMetrics, calculatePrCycle, calculatePrTimeTaken } from "../../utils/pr-calculations";
+import { calculateMetrics, calculatePrCycle, calculatePrTimeTaken, comparePrCycle } from "../../utils/pr-calculations";
 import CircleIndicator from "../common/circleIndicator";
 import { ALL_USERS_ROUTE, HOME_ROUTE } from "../../config/routes";
+
+import {info} from '../../assets/svg/index';
 
 import './user.css';
 
@@ -40,18 +43,22 @@ const User = (props) => {
                 const usr = allUsers[index];
                 dispatch(selectUser(usr));
             }
+        }else{
+            props.history.replace(HOME_ROUTE);
         }
     },[allUsers])
 
     useEffect(()=>{
-        if(!(user.hasOwnProperty('prs'))){
-            setIsLoading(true);
-            http.getUserById(user.id).then(({data}) => {
-                dispatch(updateUser(data.user));           
-                setIsLoading(false);
-            },(err)=>{
-                setIsLoading(false);
-            })
+        if(user.id){
+            if(!(user.hasOwnProperty('prs'))){
+                setIsLoading(true);
+                http.getUserById(user.id).then(({data}) => {
+                    dispatch(updateUser(data.user));           
+                    setIsLoading(false);
+                },(err)=>{
+                    setIsLoading(false);
+                })
+            }
         }
     },[dispatch])
 
@@ -68,7 +75,6 @@ const User = (props) => {
         if(users.length > 0 && prs.length === 0){
             getAllPrsForUser(0).then(prSet => {
                 setPrs([prSet]);
-                console.log(prSet)
             })
         }
     },[users])
@@ -83,7 +89,7 @@ const User = (props) => {
                     ids += "\""+pr.id+"\"";
                 }
             })
-            ids += "]"
+            ids += "]";
             http.getPrDetailsById(ids).then(({data})=>{
                 setPrTable([...data.prs]);
             })
@@ -124,10 +130,14 @@ const User = (props) => {
         }
         valArr[i] = val;
         setValues([...valArr]);
+        setIsLoading(true);
         getAllPrsForUser(i).then(prSet => {
             let prArr = prs;
             prArr[i] = prSet;
             setPrs([...prArr]);
+            setIsLoading(false);
+        },(err)=>{
+            setIsLoading(false);
         })
     }
 
@@ -274,6 +284,20 @@ const User = (props) => {
                     </div>
                     <div className="col-md-6">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                            <div className="info">
+                                <a
+                                    data-for="user-indicator"
+                                    data-tip="Count of all PRs till today"
+                                    data-iscapture="true"
+                                ><img src={info} alt={"info"}/></a>
+                                <ReactTooltip
+                                    id="user-indicator"
+                                    place="left"
+                                    type="info"
+                                    effect="solid"
+                                    multiline={true}
+                                />
+                            </div>
                             <div className="card-body" style={{padding:'35px'}}>
                                 <div className="row">
                                     <CircleIndicator
@@ -306,8 +330,22 @@ const User = (props) => {
                     </div>
                     <div className="col-md-3">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                            <div className="info">
+                                <a
+                                    data-for="user-pr-cycle"
+                                    data-tip="Avg Pr cycle till now / <br/> Avg PR cycle in range <br/><br/> Time taken to close a PR <br/> below 4hrs are not considered"
+                                    data-iscapture="true"
+                                ><img src={info} alt={"info"}/></a>
+                                <ReactTooltip
+                                    id="user-pr-cycle"
+                                    place="left"
+                                    type="info"
+                                    effect="solid"
+                                    multiline={true}
+                                />
+                            </div>
                             <div className="card-body" style={{padding:'35px'}}>
-                                <div className={data.avgCycle < cycle?"row pr-cycle red":"row pr-cycle green"}>
+                                <div className={comparePrCycle(data.avgCycle,cycle)?"row pr-cycle red":"row pr-cycle green"}>
                                     <div className="pr-cycle-circle">
                                         <span className="old-data">
                                             {data.avgCycle}
@@ -325,6 +363,20 @@ const User = (props) => {
                     </div>
                     <div className="col-md-3">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                            <div className="info">
+                                <a
+                                    data-for="user-resolved"
+                                    data-tip="Total PR resolved <br/>in range"
+                                    data-iscapture="true"
+                                ><img src={info} alt={"info"}/></a>
+                                <ReactTooltip
+                                    id="user-resolved"
+                                    place="left"
+                                    type="info"
+                                    effect="solid"
+                                    multiline={true}
+                                />
+                            </div>
                             <div className="card-body" style={{padding:'35px'}}>
                                 <div className="row pr-cycle">
                                     <div className="pr-cycle-circle">
@@ -405,6 +457,20 @@ const User = (props) => {
                                 </DatePicker>
                         </div>
                     })}
+                    <div className="info" style={{position:"absolute",top:"0px",right:"10px"}}>
+                        <a
+                            data-for="user-range"
+                            data-tip="Range of all comparisions are equal. <br/>User for 1st range cannot be changed."
+                            data-iscapture="true"
+                        ><img src={info} alt={"info"}/></a>
+                        <ReactTooltip
+                            id="user-range"
+                            place="left"
+                            type="info"
+                            effect="solid"
+                            multiline={true}
+                        />
+                    </div>
                 </div>
             </div>
             {prs[0].length === 0 && <div style={{width:'100%',display:'flex',justifyContent:'center'}}>No PRs found</div>}

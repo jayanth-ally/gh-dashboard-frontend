@@ -1,28 +1,36 @@
 import {convertDate,convertTimeToDays,getNextDate,getPreviousDate} from './time-conversion';
 
 const calculatePrsByDate = (prs,options={}) => {
+    let resultSet = [];
     if(prs.length === 0){
-        return {message:"No Prs available",count:0};
+        // return {message:"No Prs available",count:0,resultSet};
     }
-    prs = filterPrsByDate(prs,options);
+    // prs = filterPrsByDate(prs,options);
     let lastDate = new Date().toISOString();
     let endDate = new Date().toISOString();
-    prs.map((pr)=>{
-        if(pr.updatedAt < lastDate){
-            lastDate = pr.updatedAt;
-        }
-        if(endDate < pr.updatedAt){
-            endDate = pr.updatedAt;
-        }
-    })
+    if(options.hasOwnProperty('from') && options.hasOwnProperty('to')){
+        lastDate = new Date(options.from).toISOString();
+        endDate = new Date(options.to).toISOString();
+    }else if(options.hasOwnProperty('from')){
+        lastDate = new Date(options.from).toISOString();
+        endDate = new Date().toISOString();
+    }else{
+        prs.map((pr)=>{
+            if(pr.updatedAt < lastDate){
+                lastDate = pr.updatedAt;
+            }
+            if(endDate < pr.updatedAt){
+                endDate = pr.updatedAt;
+            }
+        })
+    }
     endDate = getNextDate(endDate);
     const startDate = convertDate(lastDate);
     let total = 0;
     let from = startDate;
     let to = getNextDate(startDate);
-    let resultSet = [];
 
-    while(total < prs.length && from <= endDate){
+    while(total <= prs.length && from < endDate){
         let arr = prs.filter((pr)=>(pr.updatedAt >= from && pr.updatedAt <= to));
         total += arr.length;
         let obj = {
@@ -356,7 +364,6 @@ const getTopFiveTeams = (teams,metric="count") => {
         let result = calculateMetrics(team.prs);
         if(metric === "timeTaken"){
             result = calculatePrCycle(team.prs,{prCycle:true});
-            console.log(convertTimeToDays(result.timeTaken.avg));
         }
         arr.push({id:team._id,name:team.name,result});
     })
@@ -446,6 +453,26 @@ const getQuery = (repo,options={}) => {
     return query;
 }
 
+const comparePrCycle = (pastData,data) => {
+    if((pastData.includes('day') && data.includes('day')) || (pastData.includes('hour') && data.includes('hour')) || pastData.includes('min') && data.includes('min')){
+        let p = parseFloat(pastData.split(' ')[0]);
+        let d = parseFloat(data.split(' ')[0]);
+        if(p < d){
+            return true;
+        }else{
+            return false;
+        }
+    }else if(pastData.includes('day')){
+        return true;
+    }else if(data.includes('day')){
+        return false;
+    }else if(pastData.includes('hour')){
+        return true;
+    }else{
+        return false;
+    }
+}
+
 function ParseFloat(str,val=2) {
     // str = str.toString();
     // str = str.slice(0, (str.indexOf(".")) + val + 1); 
@@ -461,5 +488,6 @@ export {
     getTopFiveTeams,
     calculatePrCycle,
     calculatePrTimeTaken,
+    comparePrCycle,
     getQuery
 }

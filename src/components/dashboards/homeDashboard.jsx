@@ -38,6 +38,12 @@ const HomeDashboard = (props) => {
     },[dispatch])
 
     useEffect(()=>{
+        if(repos.length === 0){
+            loadData();
+        }
+    },[repos])
+
+    useEffect(()=>{
         if(teams.length>0){
             props.history.replace(HOME_ROUTE);
         }

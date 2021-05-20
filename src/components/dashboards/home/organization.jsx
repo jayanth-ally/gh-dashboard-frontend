@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import {Link} from 'react-router-dom';
+import ReactTooltip from 'react-tooltip';
 
 import CircleIndicator from '../../common/circleIndicator';
 import ChartCard from '../../common/chartCard/index';
+import {info} from '../../../assets/svg/index';
 
 import * as http from '../../../utils/http';
-import { calculateMetrics, calculatePrCycle } from '../../../utils/pr-calculations';
+import { calculateMetrics, calculatePrCycle, comparePrCycle } from '../../../utils/pr-calculations';
 import { convertDate, convertTimeToDays } from '../../../utils/time-conversion';
 import {prsLastWeek,prsLastDay,prsPreviousWeek} from '../../../config/chat-items';
 
@@ -195,15 +197,29 @@ const Organization = ({repos,users}) => {
 
     return <>
     <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 className="h2">My Organization</h1>
+        <img src="https://ally.io/wp-content/themes/sightbox/assets/images/logo.svg" alt="Ally.io" width="100px" height="30px" />
     </div>
     <div className="home-body py-5 bg-alice-blue">
         <div className="container">
             <div className="flex-container row">
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                        <div className="info">
+                            <a
+                                data-for="pr-cycle"
+                                data-tip="Average no of time to close <br/> a PR (previous week / last 7 days)<br/><br/> Time taken to close a PR <br/> below 4hrs are not considered"
+                                data-iscapture="true"
+                            ><img src={info} alt={"info"}/></a>
+                            <ReactTooltip
+                                id="pr-cycle"
+                                place="left"
+                                type="info"
+                                effect="solid"
+                                multiline={true}
+                            />
+                        </div>
                         <div className="card-body" style={{padding:'11px'}}>
-                            <div className={pastDataObj.prs.cycle < data.prs.cycle?"row pr-cycle red":"row pr-cycle green"}>
+                            <div className={comparePrCycle(pastDataObj.prs.cycle,data.prs.cycle)?"row pr-cycle red":"row pr-cycle green"}>
                                 <div className="pr-cycle-circle">
                                     <div className="old-data">
                                         {pastData.prs.cycle}
@@ -221,6 +237,20 @@ const Organization = ({repos,users}) => {
                 </div>
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                        <div className="info">
+                            <a
+                                data-for="pr-resolved"
+                                data-tip="Average PR resolved <br/> in last 7 days"
+                                data-iscapture="true"
+                            ><img src={info} alt={"info"}/></a>
+                            <ReactTooltip
+                                id="pr-resolved"
+                                place="left"
+                                type="info"
+                                effect="solid"
+                                multiline={true}
+                            />
+                        </div>
                         <div className="card-body" style={{padding:'11px'}}>
                             <div className={pastDataObj.resolved > data.resolved ? "row pr-cycle red":"row pr-cycle green"}>
                                 <div className="pr-cycle-circle">
@@ -240,6 +270,20 @@ const Organization = ({repos,users}) => {
                 </div>
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                        <div className="info">
+                            <a
+                                data-for="pr-merged"
+                                data-tip="Average PR merged <br/> in last 7 days"
+                                data-iscapture="true"
+                            ><img src={info} alt={"info"}/></a>
+                            <ReactTooltip
+                                id="pr-merged"
+                                place="left"
+                                type="info"
+                                effect="solid"
+                                multiline={true}
+                            />
+                        </div>
                         <div className="card-body" style={{padding:'11px'}}>
                             <div className={pastDataObj.prs.merged > data.prs.merged?"row pr-cycle red":"row pr-cycle green"}>
                                 <div className="pr-cycle-circle">
@@ -259,6 +303,20 @@ const Organization = ({repos,users}) => {
                 </div>
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                        <div className="info">
+                            <a
+                                data-for="pr-reviews"
+                                data-tip="Average PR Review <br/>comments in last 7 days"
+                                data-iscapture="true"
+                            ><img src={info} alt={"info"}/></a>
+                            <ReactTooltip
+                                id="pr-reviews"
+                                place="left"
+                                type="info"
+                                effect="solid"
+                                multiline={true}
+                            />
+                        </div>
                         <div className="card-body" style={{padding:'11px'}}>
                             <div className={pastDataObj.reviews > data.reviews?"row pr-cycle red":"row pr-cycle green"}>
                                 <div className="pr-cycle-circle">
@@ -278,6 +336,20 @@ const Organization = ({repos,users}) => {
                 </div>
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                        <div className="info">
+                            <a
+                                data-for="pr-reviewed"
+                                data-tip="Total no of PR <br/>reviewed in last 7 days"
+                                data-iscapture="true"
+                            ><img src={info} alt={"info"}/></a>
+                            <ReactTooltip
+                                id="pr-reviewed"
+                                place="left"
+                                type="info"
+                                effect="solid"
+                                multiline={true}
+                            />
+                        </div>
                         <div className="card-body" style={{padding:'11px'}}>
                             <div className={pastDataObj.reviewed > data.reviewed?"row pr-cycle red":"row pr-cycle green"}>
                                 <div className="pr-cycle-circle">
@@ -297,8 +369,22 @@ const Organization = ({repos,users}) => {
                 </div>
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                        <div className="info">
+                            <a
+                                data-for="pr-reverts"
+                                data-tip="Total reverts <br/> in last 7 days"
+                                data-iscapture="true"
+                            ><img src={info} alt={"info"}/></a>
+                            <ReactTooltip
+                                id="pr-reverts"
+                                place="left"
+                                type="info"
+                                effect="solid"
+                                multiline={true}
+                            />
+                        </div>
                         <div className="card-body" style={{padding:'11px'}}>
-                            <div className={pastDataObj.reverts > data.reverts?"row pr-cycle red":"row pr-cycle green"}>
+                            <div className={pastDataObj.reverts < data.reverts?"row pr-cycle red":"row pr-cycle green"}>
                                 <div className="pr-cycle-circle">
                                     <div className="old-data">
                                         {pastData.reverts}
@@ -316,6 +402,20 @@ const Organization = ({repos,users}) => {
                 </div>
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                        <div className="info">
+                            <a
+                                data-for="pr-additions"
+                                data-tip="Total no of lines <br/>added in last 7 days"
+                                data-iscapture="true"
+                            ><img src={info} alt={"info"}/></a>
+                            <ReactTooltip
+                                id="pr-additions"
+                                place="left"
+                                type="info"
+                                effect="solid"
+                                multiline={true}
+                            />
+                        </div>
                         <div className="card-body" style={{padding:'11px'}}>
                             <div className={pastDataObj.additions > data.additions?"row pr-cycle red":"row pr-cycle green"}>
                                 <div className="pr-cycle-circle">
@@ -335,8 +435,22 @@ const Organization = ({repos,users}) => {
                 </div>
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                        <div className="info">
+                            <a
+                                data-for="pr-deletions"
+                                data-tip="Total no of lines <br/>deleted in last 7 days"
+                                data-iscapture="true"
+                            ><img src={info} alt={"info"}/></a>
+                            <ReactTooltip
+                                id="pr-deletions"
+                                place="left"
+                                type="info"
+                                effect="solid"
+                                multiline={true}
+                            />
+                        </div>
                         <div className="card-body" style={{padding:'11px'}}>
-                            <div className={pastDataObj.deletions > data.deletions?"row pr-cycle red":"row pr-cycle green"}>
+                            <div className={pastDataObj.deletions < data.deletions?"row pr-cycle red":"row pr-cycle green"}>
                                 <div className="pr-cycle-circle">
                                     <div className="old-data">
                                         {pastData.deletions}

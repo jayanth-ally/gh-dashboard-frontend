@@ -41,3 +41,13 @@
     color:gray;
     font-size: 12px;
 }
+
+.info {
+    float: right;
+    margin: 5px;
+}
+
+.info img{
+    width: 12px;
+    height: 12px;
+}
