@@ -64,7 +64,7 @@ const updateTeam = async (team) => {
 }
 
 const deleteTeam = async (team) => {
-    const res = await axios.post(endpoint.DELETE_TEAM,{team});
+    const res = await axios.post(endpoint.DELETE_TEAM,{team:{_id:team._id}});
     return res;
 }
 

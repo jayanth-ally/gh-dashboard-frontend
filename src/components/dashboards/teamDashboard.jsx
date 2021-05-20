@@ -42,12 +42,6 @@ const TeamDashboard = (props) => {
         }
     },[dispatch])
 
-    useEffect(()=>{
-        if(users.length !== 0){
-            getAllTeams();
-        }
-    },[users])
-
     const refreshPage = () => {
         getAllTeams();
     }
