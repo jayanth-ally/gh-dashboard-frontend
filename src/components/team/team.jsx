@@ -3,6 +3,7 @@ import { useDispatch,useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import DatePicker, {DateObject} from "react-multi-date-picker";
 import Collapsible from 'react-collapsible';
+import ReactTooltip from 'react-tooltip';
 
 import ChartCard from '../common/chartCard/index';
 import Loading from '../loading/loading';
@@ -10,12 +11,14 @@ import Loading from '../loading/loading';
 import * as http from '../../utils/http';
 import {convertDate, convertTimeToDays, dateFormat} from '../../utils/time-conversion';
 import {defaultArr,multiArr} from '../../config/chat-items';
-import { calculatePrCycle, calculatePrTimeTaken } from "../../utils/pr-calculations";
+import { calculatePrCycle, calculatePrTimeTaken, comparePrCycle } from "../../utils/pr-calculations";
 import CircleIndicator from "../common/circleIndicator";
 import { selectTeam } from "../../store/teams/actions";
 import { HOME_ROUTE, TEAMS_ROUTE } from "../../config/routes";
 import UserCards from "../user/userCards";
 import { selectUser } from "../../store/users/actions";
+
+import {info} from '../../assets/svg/index';
 
 const Team = (props) => {
     const dispatch = useDispatch();
@@ -219,6 +222,20 @@ const Team = (props) => {
                     </div>
                     <div className="col-md-6">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                            <div className="info">
+                                <a
+                                    data-for="team-indicator"
+                                    data-tip="Count of all PRs till today"
+                                    data-iscapture="true"
+                                ><img src={info} alt={"info"}/></a>
+                                <ReactTooltip
+                                    id="team-indicator"
+                                    place="left"
+                                    type="info"
+                                    effect="solid"
+                                    multiline={true}
+                                />
+                            </div>
                             <div className="card-body" style={{padding:'35px'}}>
                                 <div className="row">
                                     <CircleIndicator
@@ -251,8 +268,22 @@ const Team = (props) => {
                     </div>
                     <div className="col-md-3">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                            <div className="info">
+                                <a
+                                    data-for="team-pr-cycle"
+                                    data-tip="Avg Pr cycle till now / <br/> Avg PR cycle in range <br/><br/> Time taken to close a PR <br/> below 4hrs are not considered"
+                                    data-iscapture="true"
+                                ><img src={info} alt={"info"}/></a>
+                                <ReactTooltip
+                                    id="team-pr-cycle"
+                                    place="left"
+                                    type="info"
+                                    effect="solid"
+                                    multiline={true}
+                                />
+                            </div>
                             <div className="card-body" style={{padding:'35px'}}>
-                                <div className={data.avgCycle < cycle?"row pr-cycle red":"row pr-cycle green"}>
+                                <div className={comparePrCycle(data.avgCycle,cycle)?"row pr-cycle red":"row pr-cycle green"}>
                                     <div className="pr-cycle-circle">
                                         <span className="old-data">
                                             {data.avgCycle}
@@ -270,6 +301,20 @@ const Team = (props) => {
                     </div>
                     <div className="col-md-3">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                            <div className="info">
+                                <a
+                                    data-for="team-resolved"
+                                    data-tip="Total PR resolved <br/>in range"
+                                    data-iscapture="true"
+                                ><img src={info} alt={"info"}/></a>
+                                <ReactTooltip
+                                    id="team-resolved"
+                                    place="left"
+                                    type="info"
+                                    effect="solid"
+                                    multiline={true}
+                                />
+                            </div>
                             <div className="card-body" style={{padding:'35px'}}>
                                 <div className="row pr-cycle">
                                     <div className="pr-cycle-circle">

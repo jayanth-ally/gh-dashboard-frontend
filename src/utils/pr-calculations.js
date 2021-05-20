@@ -446,6 +446,26 @@ const getQuery = (repo,options={}) => {
     return query;
 }
 
+const comparePrCycle = (pastData,data) => {
+    if((pastData.includes('day') && data.includes('day')) || (pastData.includes('hour') && data.includes('hour')) || pastData.includes('min') && data.includes('min')){
+        let p = parseFloat(pastData.split(' ')[0]);
+        let d = parseFloat(data.split(' ')[0]);
+        if(p < d){
+            return true;
+        }else{
+            return false;
+        }
+    }else if(pastData.includes('day')){
+        return true;
+    }else if(data.includes('day')){
+        return false;
+    }else if(pastData.includes('hour')){
+        return true;
+    }else{
+        return false;
+    }
+}
+
 function ParseFloat(str,val=2) {
     // str = str.toString();
     // str = str.slice(0, (str.indexOf(".")) + val + 1); 
@@ -461,5 +481,6 @@ export {
     getTopFiveTeams,
     calculatePrCycle,
     calculatePrTimeTaken,
+    comparePrCycle,
     getQuery
 }

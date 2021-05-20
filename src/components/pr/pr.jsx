@@ -1,6 +1,7 @@
 import React,{ useState,useEffect, useRef, createRef } from "react";
 import { useDispatch,useSelector } from "react-redux";
 import DatePicker, {DateObject} from "react-multi-date-picker";
+import ReactTooltip from 'react-tooltip';
 
 import ChartCard from '../common/chartCard/index';
 import Loading from '../loading/loading';
@@ -12,6 +13,8 @@ import {defaultArr,multiArr} from '../../config/chat-items';
 import * as charts from '../../utils/chart-conversion';
 import { Link } from "react-router-dom";
 import { HOME_ROUTE, PR_ROUTE } from "../../config/routes";
+
+import {info} from '../../assets/svg/index';
 
 const PR = (props) => {
     const dispatch = useDispatch();
@@ -129,6 +132,20 @@ const PR = (props) => {
                                 </DatePicker>
                         </div>
                     })}
+                    <div className="info" style={{position:"absolute",top:"0px",right:"10px"}}>
+                        <a
+                            data-for="pr-range"
+                            data-tip="Range of all comparisions are equal"
+                            data-iscapture="true"
+                        ><img src={info} alt={"info"}/></a>
+                        <ReactTooltip
+                            id="pr-range"
+                            place="left"
+                            type="info"
+                            effect="solid"
+                            multiline={true}
+                        />
+                    </div>
                 </div>
             </div>
             <DefaultCharts />
