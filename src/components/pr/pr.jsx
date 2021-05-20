@@ -28,7 +28,9 @@ const PR = (props) => {
     },[])
 
     useEffect(()=>{
-    },[values])
+        console.log(prs);
+    },[prs])
+
     useEffect(()=>{
         if(repo.hasOwnProperty('prs')){
             setPrs([repo.prs]);
@@ -43,6 +45,7 @@ const PR = (props) => {
         }
         valArr[i] = val;
         setValues([...valArr]);
+        setIsLoading(true);
         http.getPrsByDate(
             {
                 id:repo.id,
@@ -57,6 +60,9 @@ const PR = (props) => {
                     prArr[i] = data.prs;
                     setPrs([...prArr]);
                 }
+                setIsLoading(false);
+            },(err)=>{
+                setIsLoading(false);
             })
     }
 

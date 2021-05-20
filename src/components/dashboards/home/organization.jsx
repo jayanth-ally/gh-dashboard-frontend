@@ -197,7 +197,7 @@ const Organization = ({repos,users}) => {
 
     return <>
     <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <img src="https://ally.io/wp-content/themes/sightbox/assets/images/logo.svg" alt="Ally.io" class="brand logo" width="100px" height="30px" />
+        <img src="https://ally.io/wp-content/themes/sightbox/assets/images/logo.svg" alt="Ally.io" width="100px" height="30px" />
     </div>
     <div className="home-body py-5 bg-alice-blue">
         <div className="container">

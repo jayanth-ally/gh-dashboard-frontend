@@ -1,6 +1,6 @@
 import { deleteTeam } from './http';
 import { calculateMetrics, calculatePrCycle, calculatePrsByDate, getTopFiveTeams } from './pr-calculations';
-import {convertTime, convertTimeToDays, dateFormat} from './time-conversion';
+import {convertDate, convertTime, convertTimeToDays, dateFormat} from './time-conversion';
 
 const getBarForNoOfPrs = (prs) => {
     let result = calculateMetrics(prs);
@@ -291,9 +291,13 @@ const getStackedLinesForMultiplePrs = (prs,range,key='commits',innerKey='total',
     let dates = [];
     let series = [];
     let resultSet = [];
-    prs.map((prSet) => {
-        resultSet.push(calculatePrsByDate(prSet));
+    prs.map((prSet,i) => {
+        let val = range[i];
+        resultSet.push(calculatePrsByDate(prSet,{from:convertDate(dateFormat(val[0])),to:convertDate(dateFormat(val[1]))}));
     });
+    if(key === "count" && innerKey === "total"){
+        // console.log(resultSet);
+    }
     range.map((value,i)=>{
         let rng = dateFormat(value[0])+" ~ "+dateFormat(value[1]); 
         if(teams.length > 0){

@@ -91,10 +91,14 @@ const Team = (props) => {
         }
         valArr[i] = val;
         setValues([...valArr]);
+        setIsLoading(true);
         getAllPrsForTeam(i).then(prSet => {
             let prArr = prs;
             prArr[i] = prSet;
             setPrs([...prArr]);
+            setIsLoading(false);
+        },(err)=>{
+            setIsLoading(false);
         })
     }
 
@@ -130,10 +134,14 @@ const Team = (props) => {
         });
         arr[i]=team;
         setTeams([...arr]);
+        setIsLoading(true);
         getAllPrsForTeam(i).then(prSet => {
             let prArr = prs;
             prArr[i] = prSet;
             setPrs([...prArr]);
+            setIsLoading(false);
+        },(err)=>{
+            setIsLoading(false);
         })
     }
 

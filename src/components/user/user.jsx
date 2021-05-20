@@ -43,18 +43,22 @@ const User = (props) => {
                 const usr = allUsers[index];
                 dispatch(selectUser(usr));
             }
+        }else{
+            props.history.replace(HOME_ROUTE);
         }
     },[allUsers])
 
     useEffect(()=>{
-        if(!(user.hasOwnProperty('prs'))){
-            setIsLoading(true);
-            http.getUserById(user.id).then(({data}) => {
-                dispatch(updateUser(data.user));           
-                setIsLoading(false);
-            },(err)=>{
-                setIsLoading(false);
-            })
+        if(user.id){
+            if(!(user.hasOwnProperty('prs'))){
+                setIsLoading(true);
+                http.getUserById(user.id).then(({data}) => {
+                    dispatch(updateUser(data.user));           
+                    setIsLoading(false);
+                },(err)=>{
+                    setIsLoading(false);
+                })
+            }
         }
     },[dispatch])
 
@@ -71,7 +75,6 @@ const User = (props) => {
         if(users.length > 0 && prs.length === 0){
             getAllPrsForUser(0).then(prSet => {
                 setPrs([prSet]);
-                console.log(prSet)
             })
         }
     },[users])
@@ -86,7 +89,7 @@ const User = (props) => {
                     ids += "\""+pr.id+"\"";
                 }
             })
-            ids += "]"
+            ids += "]";
             http.getPrDetailsById(ids).then(({data})=>{
                 setPrTable([...data.prs]);
             })
@@ -127,10 +130,14 @@ const User = (props) => {
         }
         valArr[i] = val;
         setValues([...valArr]);
+        setIsLoading(true);
         getAllPrsForUser(i).then(prSet => {
             let prArr = prs;
             prArr[i] = prSet;
             setPrs([...prArr]);
+            setIsLoading(false);
+        },(err)=>{
+            setIsLoading(false);
         })
     }
 
