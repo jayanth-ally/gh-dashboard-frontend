@@ -580,13 +580,6 @@ const getHorizontalStackedBarsForTeams = (teams=[],key="count") => {
         series.push({
             type: 'bar',
             name,
-            stack: 'total',
-            label: {
-                show: false
-            },
-            emphasis: {
-                focus: 'series'
-            },
             data:[]
         })
     })
@@ -609,11 +602,11 @@ const getHorizontalStackedBarsForTeams = (teams=[],key="count") => {
         },
         grid: { top: 50, right: 20, bottom: 30, left: 50 },
         xAxis : { 
-          type: 'value',
+            type: 'category',
+            data:teamArr,  
         },
         yAxis : { 
-            type: 'category',
-            data:teamArr,       
+            type:'value' 
         },
         series,
         tooltip: {

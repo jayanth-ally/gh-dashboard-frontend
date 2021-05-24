@@ -3,7 +3,7 @@ import { useDispatch,useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import DatePicker, {DateObject} from "react-multi-date-picker";
 import Collapsible from 'react-collapsible';
-import ReactTooltip from 'react-tooltip';
+import HtmlTooltip from '../common/htmlTooltip/index';
 
 import ChartCard from '../common/chartCard/index';
 import Loading from '../loading/loading';
@@ -14,7 +14,7 @@ import {defaultArr,multiArr} from '../../config/chat-items';
 import { calculatePrCycle, calculatePrTimeTaken, comparePrCycle } from "../../utils/pr-calculations";
 import CircleIndicator from "../common/circleIndicator";
 import { selectTeam } from "../../store/teams/actions";
-import { HOME_ROUTE, TEAMS_ROUTE } from "../../config/routes";
+import { EDIT_TEAM_ROUTE, HOME_ROUTE, TEAMS_ROUTE } from "../../config/routes";
 import UserCards from "../user/userCards";
 import { selectUser } from "../../store/users/actions";
 
@@ -145,6 +145,10 @@ const Team = (props) => {
         })
     }
 
+    const onEditTeam = () => {
+        props.history.push(EDIT_TEAM_ROUTE);
+    }
+
     const DefaultCharts = () => {
         if(prs.length === 1 && prs[0].length > 0){
             const arr = selectedTeam;
@@ -231,18 +235,12 @@ const Team = (props) => {
                     <div className="col-md-6">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="info">
-                                <a
-                                    data-for="team-indicator"
-                                    data-tip="Count of all PRs till today"
-                                    data-iscapture="true"
-                                ><img src={info} alt={"info"}/></a>
-                                <ReactTooltip
-                                    id="team-indicator"
-                                    place="left"
-                                    type="info"
-                                    effect="solid"
-                                    multiline={true}
-                                />
+                                <HtmlTooltip
+                                    placement="top-end"
+                                    title={<p>Count of all PRs till today</p>}
+                                    arrow>
+                                    <img src={info} alt={"info"}/>
+                                </HtmlTooltip>
                             </div>
                             <div className="card-body" style={{padding:'35px'}}>
                                 <div className="row">
@@ -277,18 +275,16 @@ const Team = (props) => {
                     <div className="col-md-3">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="info">
-                                <a
-                                    data-for="team-pr-cycle"
-                                    data-tip="Avg Pr cycle till now / <br/> Avg PR cycle in range <br/><br/> Time taken to close a PR <br/> below 4hrs are not considered"
-                                    data-iscapture="true"
-                                ><img src={info} alt={"info"}/></a>
-                                <ReactTooltip
-                                    id="team-pr-cycle"
-                                    place="left"
-                                    type="info"
-                                    effect="solid"
-                                    multiline={true}
-                                />
+                                <HtmlTooltip
+                                    placement="top-end"
+                                    title={<p>
+                                        Avg Pr cycle till now / 
+                                        <br/> Avg PR cycle in range <br/>
+                                        <br/> Time taken to close a PR 
+                                        <br/> below 4hrs are not considered</p>}
+                                    arrow>
+                                    <img src={info} alt={"info"}/>
+                                </HtmlTooltip>
                             </div>
                             <div className="card-body" style={{padding:'35px'}}>
                                 <div className={comparePrCycle(data.avgCycle,cycle)?"row pr-cycle red":"row pr-cycle green"}>
@@ -310,18 +306,14 @@ const Team = (props) => {
                     <div className="col-md-3">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="info">
-                                <a
-                                    data-for="team-resolved"
-                                    data-tip="Total PR resolved <br/>in range"
-                                    data-iscapture="true"
-                                ><img src={info} alt={"info"}/></a>
-                                <ReactTooltip
-                                    id="team-resolved"
-                                    place="left"
-                                    type="info"
-                                    effect="solid"
-                                    multiline={true}
-                                />
+                                <HtmlTooltip
+                                    placement="top-end"
+                                    title={<p>
+                                        Total PR resolved 
+                                        <br/>in range</p>}
+                                    arrow>
+                                    <img src={info} alt={"info"}/>
+                                </HtmlTooltip>
                             </div>
                             <div className="card-body" style={{padding:'35px'}}>
                                 <div className="row pr-cycle">
@@ -382,6 +374,7 @@ const Team = (props) => {
             <h1 className="h2">{title}</h1>
             <div className="btn-toolbar mb-2 mb-md-0">
                 <div className="btn-group mr-2">
+                <button className="btn btn-sm btn-outline-secondary" onClick={onEditTeam}>Edit</button>
                     <button className="btn btn-sm btn-outline-secondary" onClick={addComparisions}>Compare</button>
                 </div>
             </div>

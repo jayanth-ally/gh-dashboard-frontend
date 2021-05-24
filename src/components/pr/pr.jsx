@@ -1,7 +1,7 @@
 import React,{ useState,useEffect, useRef, createRef } from "react";
 import { useDispatch,useSelector } from "react-redux";
 import DatePicker, {DateObject} from "react-multi-date-picker";
-import ReactTooltip from 'react-tooltip';
+import HtmlTooltip from '../common/htmlTooltip/index';
 
 import ChartCard from '../common/chartCard/index';
 import Loading from '../loading/loading';
@@ -139,18 +139,12 @@ const PR = (props) => {
                         </div>
                     })}
                     <div className="info" style={{position:"absolute",top:"0px",right:"10px"}}>
-                        <a
-                            data-for="pr-range"
-                            data-tip="Range of all comparisions are equal"
-                            data-iscapture="true"
-                        ><img src={info} alt={"info"}/></a>
-                        <ReactTooltip
-                            id="pr-range"
-                            place="left"
-                            type="info"
-                            effect="solid"
-                            multiline={true}
-                        />
+                        <HtmlTooltip
+                            placement="top-end"
+                            title={<p>Range of all comparisions are equal</p>}
+                            arrow>
+                            <img src={info} alt={"info"}/>
+                        </HtmlTooltip>
                     </div>
                 </div>
             </div>

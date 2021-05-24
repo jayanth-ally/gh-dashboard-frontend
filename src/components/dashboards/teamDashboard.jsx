@@ -10,6 +10,8 @@ import * as http from '../../utils/http';
 import {addUsers} from '../../store/users/actions';
 import {addTeams,deleteTeam,selectTeam,updateTeam} from '../../store/teams/actions';
 
+import {edit,editGreen,deleteIcon,deleteRed} from '../../assets/svg/index';
+
 import { 
     CREATE_TEAM_ROUTE,
     EDIT_TEAM_ROUTE,
@@ -25,10 +27,19 @@ const TeamDashboard = (props) => {
     const teams = useSelector(state => state.teams.all);
     const users = useSelector(state => state.users.all);
     const [isLoading,setIsLoading] = useState(false);
+    const [showMenu,setShowMenu] = useState([]);
 
     useEffect(()=>{
         props.setNavKey(props.navKey);
     },[])
+
+    useEffect(()=>{
+        let menu = [];
+        teams.map((_)=>{
+            menu.push(false);
+        })
+        setShowMenu([...menu]);
+    },[teams])
 
     useEffect(()=>{
         if(users.length === 0){
@@ -65,12 +76,14 @@ const TeamDashboard = (props) => {
         props.history.push(CREATE_TEAM_ROUTE);
     }
 
-    const onEditTeam = (team) => {
+    const onEditTeam = (e,team) => {
+        e.stopPropagation();
         dispatch(selectTeam(team));
         props.history.push(EDIT_TEAM_ROUTE);
     }
 
-    const onDeleteTeam = (team) => {
+    const onDeleteTeam = (e,team) => {
+        e.stopPropagation();
         dispatch(deleteTeam(team));
         http.deleteTeam(team);
     }
@@ -105,6 +118,34 @@ const TeamDashboard = (props) => {
         props.history.push('/team/'+team._id);
     }
 
+    const onMenuClicked = (e,i) => {
+        e.stopPropagation();
+        openMenu(e,i);
+    }
+
+    const openMenu = (event,i) => {
+        event.preventDefault();
+        let menu = [];
+        showMenu.map((_)=>{
+            menu.push(false);
+        })
+        if(!showMenu[i]){
+            menu[i] = true;
+        }
+        setShowMenu([...menu]);
+        document.addEventListener('click', (event)=>closeMenu(event));
+      }
+      
+      const closeMenu = (event) => {
+        
+          let menu = [];
+          showMenu.map((_)=>{
+            menu.push(false);
+          })
+          setShowMenu([...menu]);
+          document.removeEventListener('click', (event)=>closeMenu(event));
+      }
+
     return isLoading?<Loading/>:(
         <>
         <div className="breadcrumbs">
@@ -138,13 +179,26 @@ const TeamDashboard = (props) => {
                                 <div className="team-name">
                                     {team.name}
                                 </div>
+                                <div className="team-menu">
+                                    <div onClick={(e)=>onMenuClicked(e,index)} className="menu-btn">
+                                        <div className="bar"></div>
+                                        <div className="bar"></div>
+                                        <div className="bar"></div>
+                                    </div>
+                                    {showMenu[index] && <div className="card menu">
+                                            <div onClick={(e)=>{onEditTeam(e,team)}} className="edit green-hover">
+                                                <img src={editGreen} width="15px" height="15px"/>
+                                                <span>Edit</span>
+                                            </div>
+                                            <div onClick={(e)=>{onDeleteTeam(e,team)}} className="delete red-hover"> 
+                                                <img src={deleteRed} width="15px" height="15px"/>
+                                                <span>Delete</span>
+                                            </div>
+                                        </div>}
+                                </div>
                                 <hr/>
                                 <div className="card-body">
                                     {graph}
-                                    <div className="action-btns btn-group mr-2">
-                                        <button className="btn btn-sm btn-outline-success" onClick={()=>{onEditTeam(team)}}>Edit</button>
-                                        <button className="btn btn-sm btn-outline-danger" onClick={()=>{onDeleteTeam(team)}}>Delete</button>
-                                    </div>
                                 </div>
                             </div>
                         </div>
