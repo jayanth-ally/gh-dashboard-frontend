@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {Link} from 'react-router-dom';
-import ReactTooltip from 'react-tooltip';
 
+import HtmlTooltip from '../../common/htmlTooltip/index';
 import CircleIndicator from '../../common/circleIndicator';
 import ChartCard from '../../common/chartCard/index';
 import {info} from '../../../assets/svg/index';
@@ -204,19 +204,17 @@ const Organization = ({repos,users}) => {
             <div className="flex-container row">
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
-                        <div className="info">
-                            <a
-                                data-for="pr-cycle"
-                                data-tip="Average no of time to close <br/> a PR (previous week / last 7 days)<br/><br/> Time taken to close a PR <br/> below 4hrs are not considered"
-                                data-iscapture="true"
-                            ><img src={info} alt={"info"}/></a>
-                            <ReactTooltip
-                                id="pr-cycle"
-                                place="left"
-                                type="info"
-                                effect="solid"
-                                multiline={true}
-                            />
+                        <div className="info">                            
+                            <HtmlTooltip
+                                placement="top-end"
+                                title={<p>
+                                    Average no of time to close a PR
+                                    <br/> (previous week / last 7 days)<br/>
+                                    <br/> Time taken to close a PR 
+                                    <br/> below 4hrs are not considered</p>}
+                                arrow>
+                                <img src={info} alt={"info"}/>
+                            </HtmlTooltip>
                         </div>
                         <div className="card-body" style={{padding:'11px'}}>
                             <div className={comparePrCycle(pastDataObj.prs.cycle,data.prs.cycle)?"row pr-cycle red":"row pr-cycle green"}>
@@ -238,18 +236,14 @@ const Organization = ({repos,users}) => {
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                         <div className="info">
-                            <a
-                                data-for="pr-resolved"
-                                data-tip="Average PR resolved <br/> in last 7 days"
-                                data-iscapture="true"
-                            ><img src={info} alt={"info"}/></a>
-                            <ReactTooltip
-                                id="pr-resolved"
-                                place="left"
-                                type="info"
-                                effect="solid"
-                                multiline={true}
-                            />
+                            <HtmlTooltip
+                                placement="top-end"
+                                title={<p>
+                                    Average PR resolved
+                                    <br/> in last 7 days</p>}
+                                arrow>
+                                <img src={info} alt={"info"}/>
+                            </HtmlTooltip>
                         </div>
                         <div className="card-body" style={{padding:'11px'}}>
                             <div className={pastDataObj.resolved > data.resolved ? "row pr-cycle red":"row pr-cycle green"}>
@@ -271,18 +265,14 @@ const Organization = ({repos,users}) => {
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                         <div className="info">
-                            <a
-                                data-for="pr-merged"
-                                data-tip="Average PR merged <br/> in last 7 days"
-                                data-iscapture="true"
-                            ><img src={info} alt={"info"}/></a>
-                            <ReactTooltip
-                                id="pr-merged"
-                                place="left"
-                                type="info"
-                                effect="solid"
-                                multiline={true}
-                            />
+                            <HtmlTooltip
+                                placement="top-end"
+                                title={<p>
+                                    Average PR merged 
+                                    <br/> in last 7 days</p>}
+                                arrow>
+                                <img src={info} alt={"info"}/>
+                            </HtmlTooltip>
                         </div>
                         <div className="card-body" style={{padding:'11px'}}>
                             <div className={pastDataObj.prs.merged > data.prs.merged?"row pr-cycle red":"row pr-cycle green"}>
@@ -295,7 +285,7 @@ const Organization = ({repos,users}) => {
                                     </div>
                                 </div>
                                 <div className="pr-cycle-title">
-                                    Prs Merged
+                                    PRs Merged
                                 </div>
                             </div>
                         </div>
@@ -304,18 +294,14 @@ const Organization = ({repos,users}) => {
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                         <div className="info">
-                            <a
-                                data-for="pr-reviews"
-                                data-tip="Average PR Review <br/>comments in last 7 days"
-                                data-iscapture="true"
-                            ><img src={info} alt={"info"}/></a>
-                            <ReactTooltip
-                                id="pr-reviews"
-                                place="left"
-                                type="info"
-                                effect="solid"
-                                multiline={true}
-                            />
+                            <HtmlTooltip
+                                placement="top-end"
+                                title={<p>
+                                    Average PR Review 
+                                    <br/>comments in last 7 days</p>}
+                                arrow>
+                                <img src={info} alt={"info"}/>
+                            </HtmlTooltip>
                         </div>
                         <div className="card-body" style={{padding:'11px'}}>
                             <div className={pastDataObj.reviews > data.reviews?"row pr-cycle red":"row pr-cycle green"}>
@@ -337,18 +323,14 @@ const Organization = ({repos,users}) => {
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                         <div className="info">
-                            <a
-                                data-for="pr-reviewed"
-                                data-tip="Total no of PR <br/>reviewed in last 7 days"
-                                data-iscapture="true"
-                            ><img src={info} alt={"info"}/></a>
-                            <ReactTooltip
-                                id="pr-reviewed"
-                                place="left"
-                                type="info"
-                                effect="solid"
-                                multiline={true}
-                            />
+                            <HtmlTooltip
+                                placement="top-end"
+                                title={<p>
+                                    Total no of PR 
+                                    <br/>reviewed in last 7 days</p>}
+                                arrow>
+                                <img src={info} alt={"info"}/>
+                            </HtmlTooltip>
                         </div>
                         <div className="card-body" style={{padding:'11px'}}>
                             <div className={pastDataObj.reviewed > data.reviewed?"row pr-cycle red":"row pr-cycle green"}>
@@ -361,7 +343,7 @@ const Organization = ({repos,users}) => {
                                     </div>
                                 </div>
                                 <div className="pr-cycle-title">
-                                    Prs Reviewed
+                                    PRs Reviewed
                                 </div>
                             </div>
                         </div>
@@ -370,18 +352,14 @@ const Organization = ({repos,users}) => {
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                         <div className="info">
-                            <a
-                                data-for="pr-reverts"
-                                data-tip="Total reverts <br/> in last 7 days"
-                                data-iscapture="true"
-                            ><img src={info} alt={"info"}/></a>
-                            <ReactTooltip
-                                id="pr-reverts"
-                                place="left"
-                                type="info"
-                                effect="solid"
-                                multiline={true}
-                            />
+                            <HtmlTooltip
+                                placement="top-end"
+                                title={<p>
+                                    Total reverts 
+                                    <br/>in last 7 days</p>}
+                                arrow>
+                                <img src={info} alt={"info"}/>
+                            </HtmlTooltip>
                         </div>
                         <div className="card-body" style={{padding:'11px'}}>
                             <div className={pastDataObj.reverts < data.reverts?"row pr-cycle red":"row pr-cycle green"}>
@@ -403,18 +381,14 @@ const Organization = ({repos,users}) => {
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                         <div className="info">
-                            <a
-                                data-for="pr-additions"
-                                data-tip="Total no of lines <br/>added in last 7 days"
-                                data-iscapture="true"
-                            ><img src={info} alt={"info"}/></a>
-                            <ReactTooltip
-                                id="pr-additions"
-                                place="left"
-                                type="info"
-                                effect="solid"
-                                multiline={true}
-                            />
+                            <HtmlTooltip
+                                placement="top-end"
+                                title={<p>
+                                    Total no of lines
+                                    <br/>added in last 7 days</p>}
+                                arrow>
+                                <img src={info} alt={"info"}/>
+                            </HtmlTooltip>
                         </div>
                         <div className="card-body" style={{padding:'11px'}}>
                             <div className={pastDataObj.additions > data.additions?"row pr-cycle red":"row pr-cycle green"}>
@@ -436,18 +410,14 @@ const Organization = ({repos,users}) => {
                 <div className="col-md-3">
                     <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                         <div className="info">
-                            <a
-                                data-for="pr-deletions"
-                                data-tip="Total no of lines <br/>deleted in last 7 days"
-                                data-iscapture="true"
-                            ><img src={info} alt={"info"}/></a>
-                            <ReactTooltip
-                                id="pr-deletions"
-                                place="left"
-                                type="info"
-                                effect="solid"
-                                multiline={true}
-                            />
+                            <HtmlTooltip
+                                placement="top-end"
+                                title={<p>
+                                    Total no of lines
+                                    <br/>deleted in last 7 days</p>}
+                                arrow>
+                                <img src={info} alt={"info"}/>
+                            </HtmlTooltip>
                         </div>
                         <div className="card-body" style={{padding:'11px'}}>
                             <div className={pastDataObj.deletions < data.deletions?"row pr-cycle red":"row pr-cycle green"}>

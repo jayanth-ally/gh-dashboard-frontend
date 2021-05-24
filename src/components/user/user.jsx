@@ -3,7 +3,7 @@ import { useDispatch,useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import DatePicker, {DateObject} from "react-multi-date-picker";
 import Collapsible from 'react-collapsible';
-import ReactTooltip from 'react-tooltip';
+import HtmlTooltip from '../common/htmlTooltip/index';
 
 import ChartCard from '../common/chartCard/index';
 import Loading from '../loading/loading';
@@ -285,18 +285,12 @@ const User = (props) => {
                     <div className="col-md-6">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="info">
-                                <a
-                                    data-for="user-indicator"
-                                    data-tip="Count of all PRs till today"
-                                    data-iscapture="true"
-                                ><img src={info} alt={"info"}/></a>
-                                <ReactTooltip
-                                    id="user-indicator"
-                                    place="left"
-                                    type="info"
-                                    effect="solid"
-                                    multiline={true}
-                                />
+                                <HtmlTooltip
+                                    placement="top-end"
+                                    title={<p>Count of all PRs till today</p>}
+                                    arrow>
+                                    <img src={info} alt={"info"}/>
+                                </HtmlTooltip>
                             </div>
                             <div className="card-body" style={{padding:'35px'}}>
                                 <div className="row">
@@ -331,18 +325,17 @@ const User = (props) => {
                     <div className="col-md-3">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="info">
-                                <a
-                                    data-for="user-pr-cycle"
-                                    data-tip="Avg Pr cycle till now / <br/> Avg PR cycle in range <br/><br/> Time taken to close a PR <br/> below 4hrs are not considered"
-                                    data-iscapture="true"
-                                ><img src={info} alt={"info"}/></a>
-                                <ReactTooltip
-                                    id="user-pr-cycle"
-                                    place="left"
-                                    type="info"
-                                    effect="solid"
-                                    multiline={true}
-                                />
+                                <HtmlTooltip
+                                    placement="top-end"
+                                    title={<p>
+                                        Avg Pr cycle till now / 
+                                        <br/> Avg PR cycle in range <br/>
+                                        <br/> Time taken to close a PR 
+                                        <br/> below 4hrs are not considered
+                                    </p>}
+                                    arrow>
+                                    <img src={info} alt={"info"}/>
+                                </HtmlTooltip>
                             </div>
                             <div className="card-body" style={{padding:'35px'}}>
                                 <div className={comparePrCycle(data.avgCycle,cycle)?"row pr-cycle red":"row pr-cycle green"}>
@@ -364,18 +357,14 @@ const User = (props) => {
                     <div className="col-md-3">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="info">
-                                <a
-                                    data-for="user-resolved"
-                                    data-tip="Total PR resolved <br/>in range"
-                                    data-iscapture="true"
-                                ><img src={info} alt={"info"}/></a>
-                                <ReactTooltip
-                                    id="user-resolved"
-                                    place="left"
-                                    type="info"
-                                    effect="solid"
-                                    multiline={true}
-                                />
+                                <HtmlTooltip
+                                    placement="top-end"
+                                    title={<p>
+                                        Total PR resolved 
+                                        <br/>in range</p>}
+                                    arrow>
+                                    <img src={info} alt={"info"}/>
+                                </HtmlTooltip>
                             </div>
                             <div className="card-body" style={{padding:'35px'}}>
                                 <div className="row pr-cycle">
@@ -438,7 +427,6 @@ const User = (props) => {
             <div className="btn-toolbar mb-2 mb-md-0">
                 <div className="btn-group mr-2">
                     <button className="btn btn-sm btn-outline-secondary" onClick={addComparisions}>Compare</button>
-                    <button className="btn btn-sm btn-outline-secondary">Filter</button>
                 </div>
             </div>
         </div>
@@ -458,18 +446,14 @@ const User = (props) => {
                         </div>
                     })}
                     <div className="info" style={{position:"absolute",top:"0px",right:"10px"}}>
-                        <a
-                            data-for="user-range"
-                            data-tip="Range of all comparisions are equal. <br/>User for 1st range cannot be changed."
-                            data-iscapture="true"
-                        ><img src={info} alt={"info"}/></a>
-                        <ReactTooltip
-                            id="user-range"
-                            place="left"
-                            type="info"
-                            effect="solid"
-                            multiline={true}
-                        />
+                        <HtmlTooltip
+                            placement="top-end"
+                            title={<p>
+                                Range of all comparisions are equal. 
+                                <br/>User for 1st range cannot be changed.</p>}
+                            arrow>
+                            <img src={info} alt={"info"}/>
+                        </HtmlTooltip>
                     </div>
                 </div>
             </div>

@@ -101,6 +101,10 @@ const EditTeam = (props) => {
             <span>/</span>
             <Link to={TEAMS_ROUTE}>Teams</Link>
             <span>/</span>
+            {!isNew && <>
+                <Link to={"/team/"+team._id}>{team.name}</Link>
+                <span>/</span>
+            </>}
             <span>{isNew?"Create":"Edit"}</span>
         </div>
         <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">

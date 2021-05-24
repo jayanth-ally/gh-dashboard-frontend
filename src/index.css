@@ -14,6 +14,38 @@ code {
     monospace;
 }
 
+.red{
+  color:#EF7070;
+}
+
+.red-hover:hover{
+  color:#EF7070;
+}
+
+.green{
+  color:#13ce95;
+}
+
+.green-hover:hover{
+  color:#13ce95;
+}
+
+.grey,.gray{
+  color:gray;
+}
+
+.grey-hover:hover,.gray-hover:hover{
+  color:gray;
+}
+
+.purple{
+  color:#6f42c1;
+}
+
+.purple-hover:hover{
+  color:#6f42c1;
+}
+
 a,a:hover{
   text-decoration: none !important;
 }
@@ -113,4 +145,8 @@ a,a:hover{
 .Collapsible__trigger.is-disabled {
   opacity: 0.5;
   background-color: grey; 
+}
+
+.info{
+  z-index: 1000;
 }

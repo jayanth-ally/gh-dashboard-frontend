@@ -193,7 +193,7 @@ const multiArr = [
 
 const topTeamsArr = [
     {
-        name:'Top 5 Teams (Total PR)',
+        name:'Top 5 Teams (Total PRs)',
         key:'count',
         option:(teams,key)=>charts.getHorizontalStackedBarsForTeamsPRCount(teams),
     },
@@ -215,17 +215,17 @@ const topTeamsArr = [
 ]
 
 const prsLastWeek = {
-    name:'PR in last 7 days',
+    name:'PRs in last 7 days',
     option:(prs,range,teams)=>charts.getBarForNoOfPrs(prs),
 }
 
 const prsLastDay = {
-    name:'PR in last 24 hours',
+    name:'PRs in last 24 hours',
     option:(prs,range,teams)=>charts.getBarForNoOfPrs(prs),
 }
 
 const prsPreviousWeek = {
-    name:'PR in previous week',
+    name:'PRs in previous week',
     option:(prs,range,teams)=>charts.getBarForNoOfPrs(prs),
 }
 
