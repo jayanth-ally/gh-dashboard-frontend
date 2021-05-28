@@ -22,16 +22,8 @@ const defaultArr = [
         option:(res,range)=>charts.getStackedLineForPrs(res,'iterations'),
     },
     {
-        name:'Comments',
-        option:(res,range)=>charts.getStackedLineForPrs(res,'comments'),
-    },
-    {
         name:'PR Cycle',
-        option:(res)=>charts.getStackedLineForPrs(res,'timeTaken'),
-    },
-    {
-        name:'Files Changed',
-        option:(res,range)=>charts.getStackedLineForPrs(res,'changedFiles'),
+        option:(res)=>charts.getStackedLineForPrs(res,'prCycle'),
     },
     {
         name:'Files',
@@ -43,151 +35,115 @@ const multiArr = [
         name:'Count - Total',
         key:'count',
         innerKey:'total',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'count','total',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'count','total',type),
     },
     {
         name:'Count - Open',
         key:'count',
         innerKey:'open',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'count','open',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'count','open',type),
     },
     {
         name:'Count - Closed',
         key:'count',
         innerKey:'closed',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'count','closed',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'count','closed',type),
     },
     {
         name:'Count - Merged',
         key:'count',
         innerKey:'merged',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'count','merged',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'count','merged',type),
     },
     {
         name:'Commits - Total',
         key:'commits',
         innerKey:'total',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'commits','total',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'commits','total',type),
     },
     {
         name:'Commits - Avg',
         key:'commits',
         innerKey:'avg',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'commits','avg',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'commits','avg',type),
     },
     {
         name:'Commits - Max',
         key:'commits',
         innerKey:'max',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'commits','max',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'commits','max',type),
     },
     {
         name:'Reverts',
         key:'commits',
         innerKey:'reverts',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'commits','reverts',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'commits','reverts',type),
     },
     {
         name:'Reviews - Total',
         key:'reviews',
         innerKey:'total',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'reviews','total',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'reviews','total',type),
     },
     {
         name:'Reviews - Avg',
         key:'reviews',
         innerKey:'avg',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'reviews','avg',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'reviews','avg',type),
     },
     {
         name:'Reviews - Max',
         key:'reviews',
         innerKey:'max',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'reviews','max',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'reviews','max',type),
     },
     {
         name:'Iterations - Total',
         key:'iterations',
         innerKey:'total',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'iterations','total',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'iterations','total',type),
     },
     {
         name:'Iterations - Avg',
         key:'iterations',
         innerKey:'avg',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'iterations','avg',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'iterations','avg',type),
     },
     {
         name:'Iterations - Max',
         key:'iterations',
         innerKey:'max',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'iterations','max',teams),
-    },
-    {
-        name:'Comments - Total',
-        key:'comments',
-        innerKey:'total',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'comments','total',teams),
-    },
-    {
-        name:'Comments - Avg',
-        key:'comments',
-        innerKey:'avg',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'comments','avg',teams),
-    },
-    {
-        name:'Comments - Max',
-        key:'comments',
-        innerKey:'max',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'comments','max',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'iterations','max',type),
     },
     {
         name:'PR Cycle - Total',
-        key:'timeTaken',
+        key:'prCycle',
         innerKey:'total',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'timeTaken','total',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'prCycle','total',type),
     },
     {
         name:'PR Cycle - Avg',
-        key:'timeTaken',
+        key:'prCycle',
         innerKey:'avg',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'timeTaken','avg',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'prCycle','avg',type),
     },
     {
         name:'PR Cycle - Max',
-        key:'timeTaken',
+        key:'prCycle',
         innerKey:'max',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'timeTaken','max',teams),
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'prCycle','max',type),
     },
     {
-        name:'Files Changed - Total',
-        key:'changedFiles',
-        innerKey:'total',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'changedFiles','total',teams),
-    },
-    {
-        name:'Files Changed - Avg',
-        key:'changedFiles',
-        innerKey:'avg',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'changedFiles','avg',teams),
-    },
-    {
-        name:'Files Changed - Max',
-        key:'changedFiles',
-        innerKey:'max',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'changedFiles','max',teams),
-    },
-    {
-        name:'File - Avg lines added',
+        name:'File - Total lines added',
         key:'files',
-        innerKey:'avgAdditions',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'files','avgAdditions',teams),
+        innerKey:'additions',
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'files','additions',type),
     },
     {
-        name:'File - Avg lines deleted',
+        name:'File - Total lines deleted',
         key:'files',
-        innerKey:'avgvDeletions',
-        option:(res,range,teams)=>charts.getStackedLinesForMultiplePrs(res,range,'files','avgDeletions',teams),
+        innerKey:'deletions',
+        option:(res,range,type)=>charts.getStackedLinesForMultiplePrs(res,range,'files','deletions',type),
     },
 ]
 
@@ -209,31 +165,28 @@ const topTeamsArr = [
     },
     {
         name:'Top 5 Teams (PR Cycle)',
-        key:'timeTaken',
+        key:'prCycle',
         option:(teams,key)=>charts.getHorizontalStackedBarsForTeamsPRCycle(teams,key),
     }
 ]
 
-const prsLastWeek = {
-    name:'PRs in last 7 days',
-    option:(prs,range,teams)=>charts.getBarForNoOfPrs(prs),
+const prsCurrent = {
+    option:(result)=>charts.getBarForNoOfPrs(result),
 }
 
 const prsLastDay = {
-    name:'PRs in last 24 hours',
-    option:(prs,range,teams)=>charts.getBarForNoOfPrs(prs),
+    option:(result)=>charts.getBarForNoOfPrs(result),
 }
 
-const prsPreviousWeek = {
-    name:'PRs in previous week',
-    option:(prs,range,teams)=>charts.getBarForNoOfPrs(prs),
+const prsPrevious = {
+    option:(result)=>charts.getBarForNoOfPrs(result),
 }
 
 export {
     defaultArr,
     multiArr,
     topTeamsArr,
-    prsLastWeek,
     prsLastDay,
-    prsPreviousWeek
+    prsCurrent,
+    prsPrevious,
 }

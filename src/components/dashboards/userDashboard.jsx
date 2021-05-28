@@ -34,7 +34,12 @@ const UserDashboard = (props) => {
     },[dispatch])
 
     useEffect(()=>{
-        setFilteredUsers(users);
+        let arr = users;
+        arr = [...arr];
+        if(filter === 'A-Z'){
+            arr = arr.sort((a,b)=> (a.login > b.login)?1:(a.login < b.login)?-1:0)
+        }
+        setFilteredUsers(arr);
     },[users])
 
     useEffect(()=>{
@@ -42,9 +47,9 @@ const UserDashboard = (props) => {
     },[filteredUsers])
 
     useEffect(()=>{
-        let arr = users.filter((u)=> u.login.includes(search));
+        let arr = users.filter((u)=> u.login.toLowerCase().includes(search.toLowerCase()));
         if(filter === 'A-Z'){
-            arr = arr.sort((a,b)=> (a.login > b.login)?1:(a.login < b.login)?-1:0)
+            arr = arr.splice().sort((a,b)=> (a.login > b.login)?1:(a.login < b.login)?-1:0)
         }
         setFilteredUsers([...arr]);
     },[search])

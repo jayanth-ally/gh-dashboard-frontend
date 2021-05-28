@@ -15,6 +15,7 @@ import {defaultArr,multiArr} from '../../config/chat-items';
 import { calculateMetrics, calculatePrCycle, calculatePrTimeTaken, comparePrCycle } from "../../utils/pr-calculations";
 import CircleIndicator from "../common/circleIndicator";
 import { ALL_USERS_ROUTE, HOME_ROUTE } from "../../config/routes";
+import { MIN_PR_CYCLE_TIME } from "../../config/constants";
 
 import {info} from '../../assets/svg/index';
 
@@ -202,7 +203,7 @@ const User = (props) => {
                 to,
                 prCycle:true,
             });
-            let prForCycle = user.prs.filter((p)=> p.timeTaken > 14400);
+            let prForCycle = user.prs.filter((p)=> p.timeTaken > MIN_PR_CYCLE_TIME);
             let [totalTimeTaken,avgTimeTaken,maxTimeTaken] = calculatePrTimeTaken(prForCycle);
             let data = {
                 commits:0,

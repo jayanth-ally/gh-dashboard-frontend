@@ -8,12 +8,10 @@ import Loading from "../../loading/loading";
 import 'reactjs-popup/dist/index.css';
 import './style.css';
 
-const ChartCardComponent = ({item,range,expandOrCompress,prs,expanded,teams=[]}) => {
+const ChartCardComponent = ({item,expandOrCompress,expanded,result={},range=[],type=""}) => {
     return <div className={expanded?"col-md-12":"col-md-4"}>
         <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer" style={{marginTop:expanded?'15px':'0'}}>
-            {prs.length === 0 && <Loading/>}
-            {prs.length > 0 && <>
-                <div className="card-head">
+            <div className="card-head">
                 <div style={{display:'flex',flexWrap:'wrap',justifyContent:'space-between',padding:'0 20px'}}>
                     <h3 className="h3-text">{item.name}</h3>
                     <span style={{width:'25px',height:'25px'}} onClick={expandOrCompress}><img src={expanded?compress:expand} alt="min-max" width="15px" height="15px" /></span>
@@ -21,14 +19,13 @@ const ChartCardComponent = ({item,range,expandOrCompress,prs,expanded,teams=[]})
                 <hr/>
             </div>
             <div className="card-body">
-                <ReactECharts option={item.option(prs,range,teams)} />
+                <ReactECharts option={item.option(result,range,type)} />
             </div>
-            </>}
         </div>
     </div>
 }
 
-const ChartCard = ({item,range,prs,teams=[],expand=false}) => {
+const ChartCard = ({item,result={},range=[],type="",expand=false}) => {
     const [isExpanded,setIsExpanded] = useState(false);
     const onExpandOrCompress = () => {
         setIsExpanded(!isExpanded);
@@ -36,18 +33,18 @@ const ChartCard = ({item,range,prs,teams=[],expand=false}) => {
     return <React.Fragment>
         <ChartCardComponent
             item={item}
-            prs={prs}
+            result={result}
             range={range}
-            teams={teams}
+            type={type}
             expandOrCompress={onExpandOrCompress}
             expanded={expand}
         />
         <Popup open={isExpanded} onClose={()=>setIsExpanded(false)}>
             <ChartCardComponent
                 item={item}
-                prs={prs}
+                result={result}
                 range={range}
-                teams={teams}
+                type={type}
                 expandOrCompress={onExpandOrCompress}
                 expanded={true}
             />

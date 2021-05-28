@@ -73,6 +73,21 @@ const getTeamsById = async (ids) => {
     return res;
 }
 
+const getOrgData = async (range,prevRange) => {
+    const res = await axios.post(endpoint.ORG_DATA,{range,prevRange});
+    return res;
+}
+
+const getTeamsData = async (range) => {
+    const res = await axios.post(endpoint.TEAMS_DATA,{range});
+    return res;
+}
+
+const getTeamData = async (range,id) => {
+    const res = await axios.post(endpoint.TEAM_DATA,{range,id});
+    return res;
+}
+
 export {
     getRepos,
     getUsers,
@@ -86,4 +101,8 @@ export {
     getTeamsById,
     updateTeam,
     deleteTeam,
+
+    getOrgData,
+    getTeamsData,
+    getTeamData
 }
