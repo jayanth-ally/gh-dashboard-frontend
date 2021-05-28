@@ -13,8 +13,8 @@ const getRepos = async () => {
     return res;
 }
 
-const getUsers = async () => {
-    const res = await axios.get(endpoint.GET_ALL_USERS);
+const getUsers = async (range) => {
+    const res = await axios.post(endpoint.GET_ALL_USERS,{range});
     return res;
 }
 

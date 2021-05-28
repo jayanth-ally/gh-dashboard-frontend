@@ -210,12 +210,7 @@ const Team = (props) => {
         ):<></>;
     }
 
-    const count = {
-        total:prs.length,
-        open:getPrCount(prs,'OPEN'),
-        closed:getPrCount(prs,'CLOSED'),
-        merged:getPrCount(prs,'MERGED'),
-    };
+    const count = selectedTeam.count;
 
     return isLoading?<Loading/>:(<>
         <div className="breadcrumbs">

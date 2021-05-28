@@ -10,6 +10,7 @@ import Timeline from "../common/timeline/index";
 import * as http from '../../utils/http';
 import {convertDate,dateFormat, getNextDate, getTooltipData} from '../../utils/time-conversion';
 import {addRepos,addPrs, addPastPrs} from '../../store/repos/actions';
+import {addOrgData} from '../../store/org/actions';
 import {addUsers} from '../../store/users/actions';
 import {addTeams} from '../../store/teams/actions';
 import TopTeams from "./home/topTeams";
@@ -23,6 +24,7 @@ const HomeDashboard = (props) => {
     const repos = useSelector(state => state.repos.all);
     const users = useSelector(state => state.users.all);
     const teams = useSelector(state => state.teams.all);
+    const orgData = useSelector(state => state.org.data);
     const [range,setRange] = useState({
         from:convertDate(dateFormat(new DateObject().subtract(6,'days'))),
         to:convertDate(dateFormat(new DateObject().add(1,'days')))
@@ -32,7 +34,6 @@ const HomeDashboard = (props) => {
         to:convertDate(dateFormat(new DateObject().subtract(6,'days')))
     })
 
-    const [orgData,setOrgData] = useState({});
     const [topFiveTeams,setTopFiveTeams] = useState([]);
     const [tooltip,setTooltip] = useState({current:'last 7 days',previous:'Previous 7 days'});
     const [selectedTimeline,setSelectedTimeline] = useState({key:'last',value:{days:7}})
@@ -42,6 +43,7 @@ const HomeDashboard = (props) => {
         prs:false,
         users:false,
         teams:false,
+        org:false,
     });
     
     useEffect(()=>{
@@ -63,14 +65,15 @@ const HomeDashboard = (props) => {
     },[dispatch])
 
     useEffect(()=>{
-        if(teams.length === 0 || (teams.length > 0 && (teams[0].data.range.from !== range.from || teams[0].data.range.to !== range.to))){
+        if((teams.length > 0 && (teams[0].data.range.from !== range.from || teams[0].data.range.to !== range.to))){
+            console.log(teams[0],range);
             setLoadingData({
                 ...loadingData,
-                repos:true,
+                org:true,
                 teams:true
             })
             http.getOrgData(range,prevRange).then(({data})=>{
-                setOrgData({...data});
+                dispatch(addOrgData(({...data})));
             })
             http.getTeamsData(range).then(({data})=>{
                 dispatch(addTeams(data.teams));
@@ -81,18 +84,18 @@ const HomeDashboard = (props) => {
     useEffect(()=>{
         setLoadingData({
             ...loadingData,
-            repos:false,
+            org:false,
         })
     },[orgData])
 
-    useEffect(()=>{
-        if(teams.length > 0){
-            setLoadingData({
-                ...loadingData,
-                teams:false,
-            })
-        }
-    },[teams])
+    // useEffect(()=>{
+    //     if(teams.length > 0){
+    //         setLoadingData({
+    //             ...loadingData,
+    //             teams:false,
+    //         })
+    //     }
+    // },[teams])
 
     // useEffect(()=>{
     //     // if(teams.length>0){
@@ -101,7 +104,7 @@ const HomeDashboard = (props) => {
     // },[teams])
 
     useEffect(()=>{
-        if(!loadingData.repos && !loadingData.prs && !loadingData.users && !loadingData.teams){
+        if(!loadingData.repos && !loadingData.prs && !loadingData.users && !loadingData.teams && !loadingData.org){
             setIsLoading(false);
         }else{
             setIsLoading(true);
@@ -128,12 +131,22 @@ const HomeDashboard = (props) => {
             })
         }
 
+        if(!orgData.hasOwnProperty('count')){
+            setLoadingData({
+                ...loadingData,
+                org:true
+            })
+            http.getOrgData(range,prevRange).then(({data})=>{
+                dispatch(addOrgData(({...data})));
+            })
+        }
+
         if(users.length === 0){
             setLoadingData({
                 ...loadingData,
                 users:true,
             })
-            http.getUsers().then(({data}) => {
+            http.getUsers(range).then(({data}) => {
                 dispatch(addUsers(data.users));           
                 getAllTeams();
                 setLoadingData({
