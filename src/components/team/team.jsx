@@ -11,13 +11,11 @@ import Loading from '../loading/loading';
 import * as http from '../../utils/http';
 import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject} from '../../utils/time-conversion';
 import {defaultArr,multiArr} from '../../config/chat-items';
-import { calculatePrCycle, calculatePrTimeTaken, comparePrCycle, getPrCount } from "../../utils/pr-calculations";
 import CircleIndicator from "../common/circleIndicator";
 import { selectTeam } from "../../store/teams/actions";
 import { EDIT_TEAM_ROUTE, HOME_ROUTE, TEAMS_ROUTE } from "../../config/routes";
 import UserCards from "../user/userCards";
 import { selectUser } from "../../store/users/actions";
-import { MIN_PR_CYCLE_TIME } from "../../config/constants";
 
 import {info} from '../../assets/svg/index';
 import DataCircles from "../common/dataCircle/dataCircles";
@@ -43,10 +41,6 @@ const Team = (props) => {
             setIsLoading(false);
         }
     },[selectedTeam])
-
-    useEffect(()=>{
-        console.log(getRangeFromDateObject(values[0]));
-    },[values])
 
     useEffect(()=>{
         if(allTeams.length > 0){

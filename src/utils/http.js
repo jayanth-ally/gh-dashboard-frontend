@@ -18,8 +18,8 @@ const getUsers = async (range) => {
     return res;
 }
 
-const getUserById = async (id) => {
-    const res = await axios.get(endpoint.GET_USER_BY_ID+'/'+id);
+const getUserById = async (range,ids) => {
+    const res = await axios.post(endpoint.GET_USER_BY_ID,{range,ids});
     return res;
 }
 

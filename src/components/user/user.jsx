@@ -10,24 +10,21 @@ import Loading from '../loading/loading';
 
 import {selectUser, updateUser} from '../../store/users/actions';
 import * as http from '../../utils/http';
-import {convertDate, convertTimeToDays, dateFormat} from '../../utils/time-conversion';
+import {convertDate, convertTimeToDays, dateFormat, getRangeFromDateObject} from '../../utils/time-conversion';
 import {defaultArr,multiArr} from '../../config/chat-items';
-import { calculateMetrics, calculatePrCycle, calculatePrTimeTaken, comparePrCycle } from "../../utils/pr-calculations";
 import CircleIndicator from "../common/circleIndicator";
 import { ALL_USERS_ROUTE, HOME_ROUTE } from "../../config/routes";
-import { MIN_PR_CYCLE_TIME } from "../../config/constants";
 
 import {info} from '../../assets/svg/index';
 
 import './user.css';
+import DataCircles from "../common/dataCircle/dataCircles";
 
 const User = (props) => {
     const dispatch = useDispatch();
     const user = useSelector(state => state.users.selected || {})
     const allUsers = useSelector(state => state.users.all || []);
     const [users,setUsers] = useState([]);
-    const [prs,setPrs] = useState([]);
-    const [prTable,setPrTable] = useState([]);
     const [isLoading,setIsLoading] = useState(false);
     const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
     
@@ -43,6 +40,7 @@ const User = (props) => {
             }else{
                 const usr = allUsers[index];
                 dispatch(selectUser(usr));
+                setUsers([user])
             }
         }else{
             props.history.replace(HOME_ROUTE);
@@ -50,77 +48,29 @@ const User = (props) => {
     },[allUsers])
 
     useEffect(()=>{
-        if(user.id){
-            if(!(user.hasOwnProperty('prs'))){
-                setIsLoading(true);
-                http.getUserById(user.id).then(({data}) => {
-                    dispatch(updateUser(data.user));           
-                    setIsLoading(false);
-                },(err)=>{
-                    setIsLoading(false);
-                })
-            }
+        if(!(user.hasOwnProperty('prs'))){
+            setIsLoading(true);
+            const range = getRangeFromDateObject(values[0]);
+            http.getUserById(range,[user.id]).then(({data}) => {
+                dispatch(updateUser(data.users[0]));           
+                setIsLoading(false);
+            },(err)=>{
+                setIsLoading(false);
+            })
         }
     },[dispatch])
 
     useEffect(()=>{
         if(user.hasOwnProperty('id')){
-            setUsers([{
-                id:user.id,
-                name:user.login
-            }])
+            setIsLoading(false);
         }
     },[user])
 
-    useEffect(()=>{
-        if(users.length > 0 && prs.length === 0){
-            getAllPrsForUser(0).then(prSet => {
-                setPrs([prSet]);
-            })
-        }
-    },[users])
-
-    useEffect(()=>{
-        let ids = "[";
-        if(prs.length > 0){
-            prs[0].map((pr,i) => {
-                if(i !== prs[0].length-1){
-                    ids += "\""+pr.id+"\",";
-                }else{
-                    ids += "\""+pr.id+"\"";
-                }
-            })
-            ids += "]";
-            http.getPrDetailsById(ids).then(({data})=>{
-                setPrTable([...data.prs]);
-            })
-        }
-    },[prs])
-
-    const getAllPrsForUser = async (userIndex) => {
-        let usr = allUsers.filter((u) => u.id === users[userIndex].id)[0];
-        let val = values[userIndex];
-        let prArr = [];
-        let data = [];
-        usr.prs.map(pr => {
-            let index = data.findIndex(d => d.repo.id === pr.repo.id);
-            let from = new DateObject(val[0]);
-            let to = new DateObject(val[1]).add(1,"days");
-
-            if(pr.updatedAt >= convertDate(dateFormat(from)) && pr.updatedAt <= convertDate(dateFormat(to))){
-                if(index === -1){
-                    data.push({repo:pr.repo,ids:[pr.id]});
-                }else{
-                    data[index].ids.push(pr.id);
-                }
-            }
-        })
-        
-        await Promise.all(data.map(async (d) => {
-            const {data} = await http.getPrsById(d.repo,d.ids);
-            prArr = [...prArr,...data.prs];
-        }));
-        return prArr;
+    const getUserDataByIndex = async (userIndex) => {
+        let range = getRangeFromDateObject(values[userIndex]);
+        let {data} = await http.getUserById(range,[users[userIndex].id]);
+        console.log(data.users[0]);
+        return data.users[0];
     }
 
     const onDateChanged = (val,i) => {
@@ -132,10 +82,10 @@ const User = (props) => {
         valArr[i] = val;
         setValues([...valArr]);
         setIsLoading(true);
-        getAllPrsForUser(i).then(prSet => {
-            let prArr = prs;
-            prArr[i] = prSet;
-            setPrs([...prArr]);
+        getUserDataByIndex(i).then(usr => {
+            let userArr = users;
+            userArr[i] = usr;
+            setUsers([...userArr]);
             setIsLoading(false);
         },(err)=>{
             setIsLoading(false);
@@ -145,7 +95,6 @@ const User = (props) => {
     const addComparisions = () => {
         setValues([...values,values[0]]);
         setUsers([...users,users[0]]);
-        setPrs([...prs,prs[0]]);
     }
 
     const removeComparison = (i) => {
@@ -155,9 +104,6 @@ const User = (props) => {
         let usersState = users;
         usersState.splice(i,1);
         setUsers([...usersState]);
-        let prArr = prs;
-        prArr.splice(i,1);
-        setPrs([...prArr]);
     }
 
     const onUserSelected = (e,i) => {
@@ -166,74 +112,74 @@ const User = (props) => {
         let usr = users[0];
         allUsers.map((u)=>{
             if(u.id === id){
-                usr = {
-                    id:u.id,
-                    name:u.login
-                };
+                usr = u;
             }
         });
         arr[i]=usr;
         console.log('updated user',arr);
         setUsers([...arr]);
-        getAllPrsForUser(i).then(prSet => {
-            let prArr = prs;
-            prArr[i] = prSet;
-            setPrs([...prArr]);
+        getUserDataByIndex(i).then(usr => {
+            let userArr = users;
+            userArr[i] = usr;
+            setUsers([...userArr]);
+            setIsLoading(false);
+        },(err)=>{
+            setIsLoading(false);
         })
     }
 
     const DefaultCharts = () => {
-        if(prs.length === 1 && prs[0].length > 0){
+        if(users.length === 1 && users[0].hasOwnProperty('count')){
             // const result = calculatePrCycle(prs[0],{
             //     from:convertDate(dateFormat(values[0][0])),
             //     to:convertDate(dateFormat(values[0][1]))
             // });
 
-            const count = {
-                total:user.prs.length,
-                open:user.prs.filter((u)=>u.state.toUpperCase()==="OPEN").length,
-                closed:user.prs.filter((u)=>u.state.toUpperCase()==="CLOSED").length,
-                merged:user.prs.filter((u)=>u.state.toUpperCase()==="MERGED").length
-            }
+            // const count = user.count;
 
-            let from = convertDate(dateFormat(values[0][0]));
-            let to = convertDate(dateFormat(values[0][1]));
-            let result = calculatePrCycle(prs[0],{
-                from,
-                to,
-                prCycle:true,
-            });
-            let prForCycle = user.prs.filter((p)=> p.timeTaken > MIN_PR_CYCLE_TIME);
-            let [totalTimeTaken,avgTimeTaken,maxTimeTaken] = calculatePrTimeTaken(prForCycle);
-            let data = {
-                commits:0,
-                reverts:0,
-                resolved:0,
-                reviews:0,
-                avgCycle:convertTimeToDays(avgTimeTaken),
-                cycle:convertTimeToDays(result.timeTaken.avg),
-                reviewed:0,
-            }
-            const cycle = data.cycle;
-            data.arr = prs[0];
-            result = calculateMetrics(data.arr);
-            data.commits = result.commits.total;
-            data.reviews = result.reviews.total;
-            data.reverts = result.commits.reverts;
-            data.resolved = result.count.closed+result.count.merged;
-            data.arr.map((d)=>{
-                if(d.reviewThreads.length > 0 || d.reviews > 0){
-                    data.reviewed ++;
-                }
-            })
+            // let from = convertDate(dateFormat(values[0][0]));
+            // let to = convertDate(dateFormat(values[0][1]));
+            // let result = calculatePrCycle(prs[0],{
+            //     from,
+            //     to,
+            //     prCycle:true,
+            // });
+            // let prForCycle = user.prs.filter((p)=> p.timeTaken > MIN_PR_CYCLE_TIME);
+            // let [totalTimeTaken,avgTimeTaken,maxTimeTaken] = calculatePrTimeTaken(prForCycle);
+            // let data = {
+            //     commits:0,
+            //     reverts:0,
+            //     resolved:0,
+            //     reviews:0,
+            //     avgCycle:convertTimeToDays(avgTimeTaken),
+            //     cycle:convertTimeToDays(result.timeTaken.avg),
+            //     reviewed:0,
+            // }
+            // const cycle = data.cycle;
+            // data.arr = prs[0];
+            // result = calculateMetrics(data.arr);
+            // data.commits = result.commits.total;
+            // data.reviews = result.reviews.total;
+            // data.reverts = result.commits.reverts;
+            // data.resolved = result.count.closed+result.count.merged;
+            // data.arr.map((d)=>{
+            //     if(d.reviewThreads.length > 0 || d.reviews > 0){
+            //         data.reviewed ++;
+            //     }
+            // })
 
             return <>
+            <DataCircles 
+                current={users[0].data.result}
+                previous={users[0].prevData.result}
+                tooltipData={{current:'last 7 days',previous:'previous 7 days'}}
+            />
             <div className="container">
                 <div className="flex-container row">
                     <div className="col-md-12">
                         <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="card-body">
-                                <Collapsible trigger={"Pull Requests ("+prs[0].length+")"}>
+                                <Collapsible trigger={"Pull Requests ("+user.prs.length+")"}>
                                     <hr/>
                                     <table className="table pr-table">
                                         <thead>
@@ -248,7 +194,7 @@ const User = (props) => {
                                         </thead>
                                         <tbody>
 
-                                        {prTable.map((pr,i)=>{
+                                        {users[0].prs.map((pr,i)=>{
                                             return  <tr key={i}>
                                                 <td>{pr.number}</td>
                                                 <td>
@@ -283,7 +229,63 @@ const User = (props) => {
                             </div>
                         </div>
                     </div>
-                    <div className="col-md-6">
+                    
+                </div>
+            </div>
+            <div className="container">
+                <div className="flex-container row">
+                    {defaultArr.map((item,index)=>{
+                        return <ChartCard key={index}
+                            item={item}
+                            result={users[0].result}
+                            range={values}
+                        />
+                    })}
+                </div>
+            </div>
+        </>
+        }
+        return <></>
+    }
+
+    const MultipleCharts = () => {
+        return users.length > 1?(
+            <div className="container">
+                <div className="flex-container row">
+                {multiArr.map((item,index)=>{
+                        return <ChartCard key={index}
+                            item={item}
+                            result={users}
+                            range={values}
+                            type="users"
+                        />
+                    })}
+                </div>
+            </div>
+        ):<></>;
+    }
+
+    const count = user.count;
+
+    return isLoading || users.length === 0?<Loading/>:(<>
+        <div className="breadcrumbs">
+            <Link to={HOME_ROUTE}>Home</Link>
+            <span>/</span>
+            <Link to={ALL_USERS_ROUTE}>Users</Link>
+            <span>/</span>
+            <span>{user.login}</span>
+        </div>
+        <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <img src={user.avatarUrl} alt="User avatar" style={{width:70,height:70,borderRadius:'50%'}}/>
+            <h1 className="h2">{user.login}</h1>
+            <div className="btn-toolbar mb-2 mb-md-0">
+                <div className="btn-group mr-2">
+                    <button className="btn btn-sm btn-outline-secondary" onClick={addComparisions}>Compare</button>
+                </div>
+            </div>
+        </div>
+        <div className="home-body px-2 py-3 bg-alice-blue">
+            <div className="col-md-12">
                         <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="info">
                                 <HtmlTooltip
@@ -323,115 +325,6 @@ const User = (props) => {
                             </div>
                         </div>
                     </div>
-                    <div className="col-md-3">
-                        <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
-                            <div className="info">
-                                <HtmlTooltip
-                                    placement="top-end"
-                                    title={<p>
-                                        Avg Pr cycle till now / 
-                                        <br/> Avg PR cycle in range <br/>
-                                        <br/> Time taken to close a PR 
-                                        <br/> below 4hrs are not considered
-                                    </p>}
-                                    arrow>
-                                    <img src={info} alt={"info"}/>
-                                </HtmlTooltip>
-                            </div>
-                            <div className="card-body" style={{padding:'35px'}}>
-                                <div className={comparePrCycle(data.avgCycle,cycle)?"row pr-cycle red":"row pr-cycle green"}>
-                                    <div className="pr-cycle-circle">
-                                        <span className="old-data">
-                                            {data.avgCycle}
-                                        </span>
-                                        <span className="new-data">
-                                            {cycle}
-                                        </span>
-                                    </div>
-                                    <div className="pr-cycle-title">
-                                        PR Cycle
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-md-3">
-                        <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
-                            <div className="info">
-                                <HtmlTooltip
-                                    placement="top-end"
-                                    title={<p>
-                                        Total PR resolved 
-                                        <br/>in range</p>}
-                                    arrow>
-                                    <img src={info} alt={"info"}/>
-                                </HtmlTooltip>
-                            </div>
-                            <div className="card-body" style={{padding:'35px'}}>
-                                <div className="row pr-cycle">
-                                    <div className="pr-cycle-circle">
-                                        {data.resolved}
-                                    </div>
-                                    <div className="pr-cycle-title">
-                                        Resolved
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div className="container">
-                <div className="flex-container row">
-                    {defaultArr.map((item,index)=>{
-                        return <ChartCard key={index}
-                            item={item}
-                            prs={prs[0]}
-                            range={values}
-                        />
-                    })}
-                </div>
-            </div>
-        </>
-        }
-        return <></>
-    }
-
-    const MultipleCharts = () => {
-        return prs.length > 1?(
-            <div className="container">
-                <div className="flex-container row">
-                {multiArr.map((item,index)=>{
-                        return <ChartCard key={index}
-                            item={item}
-                            prs={prs}
-                            teams={users}
-                            range={values}
-                        />
-                    })}
-                </div>
-            </div>
-        ):<></>;
-    }
-
-    return isLoading || prs.length === 0?<Loading/>:(<>
-        <div className="breadcrumbs">
-            <Link to={HOME_ROUTE}>Home</Link>
-            <span>/</span>
-            <Link to={ALL_USERS_ROUTE}>Users</Link>
-            <span>/</span>
-            <span>{user.login}</span>
-        </div>
-        <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <img src={user.avatarUrl} alt="User avatar" style={{width:70,height:70,borderRadius:'50%'}}/>
-            <h1 className="h2">{user.login}</h1>
-            <div className="btn-toolbar mb-2 mb-md-0">
-                <div className="btn-group mr-2">
-                    <button className="btn btn-sm btn-outline-secondary" onClick={addComparisions}>Compare</button>
-                </div>
-            </div>
-        </div>
-        <div className="home-body px-2 py-3 bg-alice-blue">
             <div className="container">
                 <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white flex-container row" style={{padding:'15px',justifyContent:'space-evenly'}}>
                     {values.map((value,i)=>{
@@ -458,8 +351,8 @@ const User = (props) => {
                     </div>
                 </div>
             </div>
-            {prs[0].length === 0 && <div style={{width:'100%',display:'flex',justifyContent:'center'}}>No PRs found</div>}
-            {prs[0].length > 0 && <>
+            {user.prs.length === 0 && <div style={{width:'100%',display:'flex',justifyContent:'center'}}>No PRs found</div>}
+            {user.prs.length > 0 && <>
                 <DefaultCharts />
                 <MultipleCharts/>
             </>}

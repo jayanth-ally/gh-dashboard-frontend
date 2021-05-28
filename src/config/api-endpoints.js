@@ -12,8 +12,6 @@ const TESTING_API = BASE_URL + "/";
 const GET_ALL_REPOS = BASE_URL + "/repos";
 const GET_ALL_TEAMS = BASE_URL + "/teams";
 const GET_ALL_USERS = BASE_URL + "/users";
-// append user_id /:id 
-const GET_USER_BY_ID = BASE_URL + "/user";
 
 // POST
 const LOGIN_USER = BASE_URL + "/login";
@@ -44,6 +42,9 @@ const DELETE_TEAM = BASE_URL + "/team/delete";
 // DB Data
 const DATA_URL = BASE_URL + '/data';
 const ORG_DATA = DATA_URL + '/org';
+// append user_id /:id 
+const GET_USER_BY_ID = BASE_URL + "/user";
+
 const TEAMS_DATA = DATA_URL + '/teams';
 const TEAM_DATA = DATA_URL + '/team';
 
