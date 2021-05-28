@@ -4,7 +4,7 @@ const HEROKU_URL = "https://ally-ghdashboard-backend.herokuapp.com/api";
 const LOCALHOST_URL = "http://localhost:5000/api";
 
 // Base url
-const BASE_URL = (!process.env.NODE_ENV || process.env.NODE_ENV==="development")?LOCALHOST_URL:HEROKU_URL;
+const BASE_URL = HEROKU_URL;
 
 // API end points
 // GET
