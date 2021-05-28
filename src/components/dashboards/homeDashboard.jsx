@@ -5,22 +5,37 @@ import {DateObject} from 'react-multi-date-picker';
 import Loading from "../loading/loading";
 
 import Organization from './home/organization';
+import Timeline from "../common/timeline/index";
 
 import * as http from '../../utils/http';
-import {convertDate,dateFormat} from '../../utils/time-conversion';
+import {convertDate,dateFormat, getNextDate, getTooltipData} from '../../utils/time-conversion';
 import {addRepos,addPrs, addPastPrs} from '../../store/repos/actions';
 import {addUsers} from '../../store/users/actions';
 import {addTeams} from '../../store/teams/actions';
 import TopTeams from "./home/topTeams";
 import { getTopFiveTeams } from "../../utils/pr-calculations";
 import { HOME_ROUTE } from "../../config/routes";
+import {MONTHS,YEAR_SPLIT} from '../../config/constants';
 
 const HomeDashboard = (props) => {
+
     const dispatch = useDispatch();
     const repos = useSelector(state => state.repos.all);
     const users = useSelector(state => state.users.all);
     const teams = useSelector(state => state.teams.all);
+    const [range,setRange] = useState({
+        from:convertDate(dateFormat(new DateObject().subtract(6,'days'))),
+        to:convertDate(dateFormat(new DateObject().add(1,'days')))
+    })
+    const [prevRange,setPrevRange] = useState({
+        from:convertDate(dateFormat(new DateObject().subtract(13,'days'))),
+        to:convertDate(dateFormat(new DateObject().subtract(6,'days')))
+    })
+
+    const [orgData,setOrgData] = useState({});
     const [topFiveTeams,setTopFiveTeams] = useState([]);
+    const [tooltip,setTooltip] = useState({current:'last 7 days',previous:'Previous 7 days'});
+    const [selectedTimeline,setSelectedTimeline] = useState({key:'last',value:{days:7}})
     const [isLoading,setIsLoading] = useState(false);
     const [loadingData,setLoadingData] = useState({
         repo:false,
@@ -33,21 +48,57 @@ const HomeDashboard = (props) => {
         props.setNavKey(props.navKey);
     },[])
 
+    const onTimelineChanged = (val,type,obj) => {
+        setTooltip(getTooltipData(type,obj));
+        setSelectedTimeline({key:type,value:obj})
+
+        if(val.range.from !== range.from || val.range.to !== range.to){
+            setRange({...val.range});
+            setPrevRange({...val.prevRange});
+        }
+    }
+    
     useEffect(()=>{
         loadData();
     },[dispatch])
 
     useEffect(()=>{
-        if(repos.length === 0){
-            loadData();
+        if(teams.length === 0 || (teams.length > 0 && (teams[0].data.range.from !== range.from || teams[0].data.range.to !== range.to))){
+            setLoadingData({
+                ...loadingData,
+                repos:true,
+                teams:true
+            })
+            http.getOrgData(range,prevRange).then(({data})=>{
+                setOrgData({...data});
+            })
+            http.getTeamsData(range).then(({data})=>{
+                dispatch(addTeams(data.teams));
+            })
         }
-    },[repos])
+    },[range])
 
     useEffect(()=>{
-        if(teams.length>0){
-            props.history.replace(HOME_ROUTE);
+        setLoadingData({
+            ...loadingData,
+            repos:false,
+        })
+    },[orgData])
+
+    useEffect(()=>{
+        if(teams.length > 0){
+            setLoadingData({
+                ...loadingData,
+                teams:false,
+            })
         }
     },[teams])
+
+    // useEffect(()=>{
+    //     // if(teams.length>0){
+    //     //     props.history.replace(HOME_ROUTE);
+    //     // }
+    // },[teams])
 
     useEffect(()=>{
         if(!loadingData.repos && !loadingData.prs && !loadingData.users && !loadingData.teams){
@@ -68,50 +119,7 @@ const HomeDashboard = (props) => {
                 setLoadingData({
                     ...loadingData,
                     repos:false,
-                })
-                data.repos.map((repo,i)=>{
-                    setLoadingData({
-                        ...loadingData,
-                        prs:true,
-                    })
-                    http.getPrsByDate(repo).then(({data}) => {
-                        dispatch(addPrs(repo,data.prs));  
-                        if(i === repos.length-1){
-                            setLoadingData({
-                                ...loadingData,
-                                prs:false,
-                            })
-                        }
-                    },err => {
-                        if(i === repos.length-1){
-                            setLoadingData({
-                                ...loadingData,
-                                prs:false,
-                            })
-                        }
-                    })
-
-                    let from = new Date();
-                    let to = new Date();
-                    to.setDate(from.getDate() - 7);
-                    from.setDate(to.getDate() - 6);
-                    http.getPrsByDate(repo,{from:convertDate(from),to:convertDate(to)}).then(({data}) => {
-                        dispatch(addPastPrs(repo,data.prs));  
-                        if(i === repos.length-1){
-                            setLoadingData({
-                                ...loadingData,
-                                prs:false,
-                            })
-                        }
-                    },err => {
-                        if(i === repos.length-1){
-                            setLoadingData({
-                                ...loadingData,
-                                prs:false,
-                            })
-                        }
-                    })
-                })          
+                })      
             },(err)=>{
                 setLoadingData({
                     ...loadingData,
@@ -119,6 +127,7 @@ const HomeDashboard = (props) => {
                 })
             })
         }
+
         if(users.length === 0){
             setLoadingData({
                 ...loadingData,
@@ -126,7 +135,7 @@ const HomeDashboard = (props) => {
             })
             http.getUsers().then(({data}) => {
                 dispatch(addUsers(data.users));           
-                getAllTeams(data.users);
+                getAllTeams();
                 setLoadingData({
                     ...loadingData,
                     users:false,
@@ -137,65 +146,43 @@ const HomeDashboard = (props) => {
                     users:false,
                 })
             })
+        }else{
+            getAllTeams();
         }
     }
 
-    const getAllTeams = (userArr) => {
-        setLoadingData({
-            ...loadingData,
-            teams:true,
-        })
-        http.getTeams().then(async ({data}) => {
-            let allTeams = [];
-            await Promise.all(data.teams.map( async (team) => {
-                const _team =  await getAllPrsForTeam(team,userArr);
-                allTeams = [...allTeams,{..._team}];
-            }));
-            dispatch(addTeams(allTeams));      
+    const getAllTeams = () => {
+        if(teams.length === 0){
             setLoadingData({
                 ...loadingData,
-                teams:false,
+                teams:true,
             })
-        },(err)=>{
-            setLoadingData({
-                ...loadingData,
-                teams:false,
+            http.getTeamsData(range,prevRange).then(({data})=>{
+                dispatch(addTeams(data.teams));
+                setLoadingData({
+                    ...loadingData,
+                    teams:false,
+                })
             })
-        })
+        }
     }
 
-    const getAllPrsForTeam = async (team,userArr) => {
-        let prs = [];
-        let data = [];
-        team.users.map((user)=>{
-            let i = userArr.findIndex(u => u.id === user.id);
-            userArr[i].prs.map(pr => {
-                let index = data.findIndex(d => d.repo.id === pr.repo.id);
-                let lastweek = new DateObject().subtract(6,"days");
-                if(pr.updatedAt >= convertDate(dateFormat(lastweek))){
-                    if(index === -1){
-                        data.push({repo:pr.repo,ids:[pr.id]});
-                    }else{
-                        data[index].ids.push(pr.id);
-                    }
-                }
-            })
-        });
-        
-        await Promise.all(data.map(async (d) => {
-            const {data} = await http.getPrsById(d.repo,d.ids);
-            prs = [...prs,...data.prs];
-        }));
-        return Object.assign({}, team, {prs});
-    }
-
-    return isLoading?<Loading/>:(
+    return (
         <>
             <div className="breadcrumbs">
                 <span>Home</span>
             </div>
-            <Organization repos={repos} users={users}/>
-            <TopTeams teams={teams}/>
+            <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <img src="https://ally.io/wp-content/themes/sightbox/assets/images/logo.svg" alt="Ally.io" width="100px" height="30px" />
+                <Timeline onValueChange={onTimelineChanged} selected={selectedTimeline}/>
+            </div>
+            
+            {isLoading? <Loading />:(
+                orgData.hasOwnProperty('current')? <>
+                    <Organization orgData={orgData} tooltipData={tooltip}/>
+                    <TopTeams teamsData={teams} tooltipData={{current:'last 7 days'}}/>
+                </> : <Loading/>
+            )}          
         </>
     );
 }

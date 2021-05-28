@@ -2,8 +2,7 @@ import { deleteTeam } from './http';
 import { calculateMetrics, calculatePrCycle, calculatePrsByDate, getTopFiveTeams } from './pr-calculations';
 import {convertDate, convertTime, convertTimeToDays, dateFormat} from './time-conversion';
 
-const getBarForNoOfPrs = (prs) => {
-    let result = calculateMetrics(prs);
+const getBarForNoOfPrs = (result) => {
     const key = "count";
     let data = [];
     let series = [{
@@ -118,8 +117,7 @@ const getStackedLineForNoOfPrs = (prs) => {
 }
 
 // comments, commits, reviews, timetaken, fileschanged, iterations
-const getStackedLineForPrs = (prs,key) => {
-    const {resultSet} = calculatePrsByDate(prs);
+const getStackedLineForPrs = ({resultSet},key) => {
     let data = [];
     let series = [{
         type: 'line',
@@ -168,7 +166,7 @@ const getStackedLineForPrs = (prs,key) => {
           trigger: 'axis'
         },
       };
-      if(key === 'timeTaken'){
+      if(key === 'prCycle'){
           options = {...options,tooltip:{
             trigger: 'axis',
             formatter:formatTimeTaken
@@ -201,8 +199,8 @@ const formatTimeTaken = (params,ticket,callback) => {
     return html;
 }
 
-const getStackedLineForFiles = (prs) => {
-    const {resultSet} = calculatePrsByDate(prs);
+const getStackedLineForFiles = ({resultSet}) => {
+    // const {resultSet} = calculatePrsByDate(prs);
     const key = "files";
     let data = [];
     let series = [{
@@ -220,8 +218,8 @@ const getStackedLineForFiles = (prs) => {
     resultSet.map(({date,result})=>{
         data.push(date);
         if(result.count.total > 0){
-            series[0].data.push(result[key].avgAdditions || 0);
-            series[1].data.push(result[key].avgDeletions || 0);
+            series[0].data.push(result[key].additions || 0);
+            series[1].data.push(result[key].deletions || 0);
         }else{
             series[0].data.push(0);
             series[1].data.push(0);
@@ -247,8 +245,8 @@ const getStackedLineForFiles = (prs) => {
       return options;
 }
 
-const getStackedLineForReverts = (prs) => {
-    const {resultSet} = calculatePrsByDate(prs);
+const getStackedLineForReverts = ({resultSet}) => {
+    // const {resultSet} = calculatePrsByDate(prs);
     const key = "reverts";
     let data = [];
     let series = [{
@@ -285,23 +283,21 @@ const getStackedLineForReverts = (prs) => {
       return options;
 }
 
-const getStackedLinesForMultiplePrs = (prs,range,key='commits',innerKey='total',teams=[]) => {
+const getStackedLinesForMultiplePrs = (result,range,key='commits',innerKey='total',type="") => {
     let data = [];
     let days = [];
     let dates = [];
     let series = [];
     let resultSet = [];
-    prs.map((prSet,i) => {
-        let val = range[i];
-        resultSet.push(calculatePrsByDate(prSet,{from:convertDate(dateFormat(val[0])),to:convertDate(dateFormat(val[1]))}));
-    });
     if(key === "count" && innerKey === "total"){
         // console.log(resultSet);
     }
     range.map((value,i)=>{
         let rng = dateFormat(value[0])+" ~ "+dateFormat(value[1]); 
-        if(teams.length > 0){
-            rng = teams[i].name+' - '+rng;
+        if(type === "teams"){
+            rng = result[i].name+' - '+rng;
+        }else if(type === "users"){
+            rng = result[i].login+' - '+rng;
         }
         data.push(rng);
         series.push({
@@ -311,7 +307,8 @@ const getStackedLinesForMultiplePrs = (prs,range,key='commits',innerKey='total',
         })
     })
     let day = 1;
-    resultSet.map((res,index)=>{
+    result.map((item,index)=>{
+        const res = item.result;
         if(index===0){
             res.resultSet.map(({date,result})=>{
                 days.push('day '+day);
@@ -346,7 +343,7 @@ const getStackedLinesForMultiplePrs = (prs,range,key='commits',innerKey='total',
           formatter:(params,ticket,callback)=>formatMultiple(params,dates)
         },
       };
-      if(key === 'timeTaken'){
+      if(key === 'prCycle'){
         options = {...options,tooltip:{
           trigger: 'axis',
           formatter:(params,ticket,callback)=>formatMultipleTimeTaken(params,dates)
@@ -432,7 +429,7 @@ const getHorizontalStackedBarsForTeamsPRCount = (teams=[]) => {
     let teamArr = [];
     teams.map((team)=>{
         teamArr.push({id:team._id,value:team.name});
-        let result = team.result;
+        let result = team.data.result;
 
         data.map((name,i)=>{
             series[i].data.push(result[key][name]);
@@ -442,13 +439,13 @@ const getHorizontalStackedBarsForTeamsPRCount = (teams=[]) => {
         legend:{
             data,
         },
-        grid: { top: 50, right: 20, bottom: 30, left: 50 },
+        grid: { top: 50, right: 20, bottom: 30, left: 70 },
         xAxis : { 
           type: 'value',
         },
         yAxis : { 
             type: 'category',
-            data:teamArr,       
+            data:teamArr, 
         },
         series,
         tooltip: {
@@ -487,7 +484,7 @@ const formatPRCountForTopTeams = (params) => {
 }
 
 const getHorizontalStackedBarsForTeamsPRCycle = (teams=[]) => {
-    const key = 'timeTaken';
+    const key = 'prCycle';
     if(teams.length === 0 ){
         return {};
     }
@@ -512,7 +509,7 @@ const getHorizontalStackedBarsForTeamsPRCycle = (teams=[]) => {
     let teamArr = [];
     teams.map((team)=>{
         teamArr.push({id:team._id,value:team.name});
-        let result = team.result;
+        let result = team.data.result;
 
         data.map((name,i)=>{
             series[i].data.push(result[key]['avg']);
@@ -522,7 +519,7 @@ const getHorizontalStackedBarsForTeamsPRCycle = (teams=[]) => {
         legend:{
             data,
         },
-        grid: { top: 50, right: 20, bottom: 30, left: 50 },
+        grid: { top: 50, right: 20, bottom: 30, left: 70 },
         xAxis : { 
           type: 'value',
         },
@@ -569,9 +566,9 @@ const getHorizontalStackedBarsForTeams = (teams=[],key="count") => {
         return {};
     }
 
-    let data = Object.keys(teams[0].result[key]);
+    let data = Object.keys(teams[0].data.result[key]);
     data = data.filter((d)=>d!== 'maxPr' && d!== 'count');
-    if(key === 'timeTaken'){
+    if(key === 'prCycle'){
         data = ['avg']
     }
 
@@ -586,10 +583,10 @@ const getHorizontalStackedBarsForTeams = (teams=[],key="count") => {
     let teamArr = [];
     teams.map((team)=>{
         teamArr.push(team.name);
-        let result = team.result;
+        let result = team.data.result;
 
         data.map((name,i)=>{
-            if(key === 'timeTaken'){
+            if(key === 'prCycle'){
                 series[i].data.push((result[key][name]/(60*60)));
             }else{
                 series[i].data.push(result[key][name]);
@@ -616,7 +613,7 @@ const getHorizontalStackedBarsForTeams = (teams=[],key="count") => {
             }
         },
       };
-      if(key === 'timeTaken'){
+      if(key === 'prCycle'){
         options = {...options,tooltip:{
           trigger: 'axis',
           axisPointer: {            // Use axis to trigger tooltip

@@ -1,3 +1,5 @@
+import { MONTHS } from "../config/constants";
+
 const getDiffDays = (pr) => {
     const lastUpdated = new Date(pr.updated_at);
     const created = new Date(pr.createdAt);
@@ -76,6 +78,31 @@ const getPreviousDate = (date) => {
     return convertDate(previousDate);
 }
 
+const getTooltipData = (type,obj) => {
+    let current = 'last 7 days';
+    let previous = 'previous 7 days';
+
+    if(type === 'quaters'){
+        current = obj.year+' '+obj.quater;
+        previous = obj.quater === 'Q1'? (obj.year - 1+' Q4'):obj.year+' Q'+(parseInt(obj.quater.split('')[1])-1);
+    }else if (type === 'months'){
+        current = obj.name+' ('+obj.year+')';
+        previous = obj.month === 0 ? 'DEC ('+(obj.year-1)+')' :MONTHS[obj.month - 1]+ ' ('+obj.year+')';
+    }else{
+        current = 'last '+obj.days+' days';
+        previous = 'previous '+obj.days+' days';
+    }
+    return {current,previous};
+}
+
+const getRangeFromDateObject = (val) => {
+    let range = {
+        from:convertDate(dateFormat(val[0])),
+        to:getNextDate(dateFormat(val[1]))
+    }
+    return range;
+}
+
 export {
     getDiffDays,
     msToDHM,
@@ -87,4 +114,6 @@ export {
     convertDate,
     getNextDate,
     getPreviousDate,
+    getTooltipData,
+    getRangeFromDateObject,
 }

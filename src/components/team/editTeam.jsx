@@ -1,11 +1,13 @@
 import { useState,useEffect } from "react";
 import { useDispatch,useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import {DateObject} from "react-multi-date-picker"
 
 import TagsInput from '../common/tagsInput';
 import Loading from '../loading/loading';
 
 import * as http from '../../utils/http';
+import { convertDate, convertTime, dateFormat } from "../../utils/time-conversion";
 import {addTeam,updateTeam,clearSelectedTeam} from '../../store/teams/actions';
 
 import {HOME_ROUTE, TEAMS_ROUTE, TEAM_ROUTE} from '../../config/routes';
@@ -42,16 +44,43 @@ const EditTeam = (props) => {
             teamDetails = {...teamDetails,_id:details._id}
         }
         http.updateTeam(teamDetails).then(({data})=>{
-            if(isNew){
-                dispatch(addTeam(data.team));
-            }else{
-                dispatch(updateTeam(data.team));
-            }
-            props.history.replace(TEAM_ROUTE);
-            setIsLoading(false);
+            getAllPrsForTeam(data.team).then((_team)=>{
+                if(isNew){
+                    dispatch(addTeam(_team));
+                }else{
+                    dispatch(updateTeam(_team));
+                }
+                props.history.replace(TEAM_ROUTE);
+                setIsLoading(false);
+            })
         },(err)=>{
             setIsLoading(false);
         })
+    }
+
+    const getAllPrsForTeam = async (team) => {
+        let prs = [];
+        let data = [];
+        team.users.map((user)=>{
+            let i = users.findIndex(u => u.id === user.id);
+            users[i].prs.map(pr => {
+                let index = data.findIndex(d => d.repo.id === pr.repo.id);
+                let lastweek = new DateObject().subtract(6,"days");
+                if(pr.updatedAt >= convertDate(dateFormat(lastweek))){
+                    if(index === -1){
+                        data.push({repo:pr.repo,ids:[pr.id]});
+                    }else{
+                        data[index].ids.push(pr.id);
+                    }
+                }
+            })
+        });
+        
+        await Promise.all(data.map(async (d) => {
+            const {data} = await http.getPrsById(d.repo,d.ids);
+            prs = [...prs,...data.prs];
+        }));
+        return Object.assign({}, team, {prs});
     }
 
     const onNameChanged = (event) => {

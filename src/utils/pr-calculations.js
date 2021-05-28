@@ -1,4 +1,5 @@
 import {convertDate,convertTimeToDays,getNextDate,getPreviousDate} from './time-conversion';
+import { MIN_PR_CYCLE_TIME } from '../config/constants';
 
 const calculatePrsByDate = (prs,options={}) => {
     let resultSet = [];
@@ -355,23 +356,26 @@ const calculatePrTimeTaken = (prs,options={}) => {
 }
 
 const getTopFiveTeams = (teams,metric="count") => {
-    let arr = [];
+    let arr = [...teams];
     let innerKey = "total";
-    if(metric === "timeTaken"){
+    if(metric === "prCycle"){
         innerKey = "avg";
     }
-    teams.map((team)=>{ 
-        let result = calculateMetrics(team.prs);
-        if(metric === "timeTaken"){
-            result = calculatePrCycle(team.prs,{prCycle:true});
-        }
-        arr.push({id:team._id,name:team.name,result});
-    })
-    arr = arr.sort((a,b)=>(a.result[metric][innerKey] < b.result[metric][innerKey])?1:(a.result[metric][innerKey] > b.result[metric][innerKey])?-1:0);
+    arr = arr.sort((a,b)=>(a.data.result[metric][innerKey] < b.data.result[metric][innerKey])?1:(a.data.result[metric][innerKey] > b.data.result[metric][innerKey])?-1:0);
     let topArr = [];
+    if(metric === "prCycle"){
+        arr = arr.filter(a => a.data.result[metric][innerKey] >= MIN_PR_CYCLE_TIME);
+    }
+    let len = arr.length;
     arr.map((team,i)=>{
-        if(i<5){
-            topArr.push(team);
+        if(metric === "prCycle"){
+            if(i>len - 6){
+                topArr.push(team);
+            }
+        }else{
+            if(i<5){
+                topArr.push(team);
+            }
         }
     })
     return topArr;
@@ -399,58 +403,11 @@ const calculatePrCycle = (prs,options={}) => {
 
     let timeTaken = 0;
     if(options.hasOwnProperty('prCycle') && options.prCycle){
-        timeTaken = 14400;
+        timeTaken = MIN_PR_CYCLE_TIME;
     }
 
     const arr = prs.filter((pr) => pr.updatedAt >= convertDate(from) && pr.closedAt !== null && pr.closedAt <= convertDate(to) && pr.timeTaken > timeTaken);
     return calculateMetrics(arr);
-}
-
-const getQuery = (repo,options={}) => {
-    let query = '';
-    let type = 'pr';
-    let state = 'all';
-
-    if(options.hasOwnProperty('type')){
-        type = options.type;
-    }
-    query += 'type:'+type;
-
-    query += '+repo:'+repo.owner+'/'+repo.name;
-
-    if(options.hasOwnProperty('state')){
-        state = options.state;
-    }
-    if(state !== 'all'){
-        query += '+state:'+state;
-    }
-
-    if(options.hasOwnProperty('created')){
-        query += '+created:'+options.created.symbol+convertDate(options.created.date);
-    }
-    if(options.hasOwnProperty('updated')){
-        query += '+updated:'+options.updated.symbol+convertDate(options.updated.date);
-    }
-    if(options.hasOwnProperty('closed')){
-        query += '+closed:'+options.closed.symbol+convertDate(options.closed.date);
-    }
-
-    if(options.hasOwnProperty('_is')){
-        options._is.map((item)=>{
-            query += '+is:'+item;
-        })
-    }
-    if(options.hasOwnProperty('_in')){
-        options._in.map((item)=>{
-            query += '+in:'+item;
-        })
-    }
-
-    if(options.hasOwnProperty('text')){
-        query += '+'+options.text;
-    }
-
-    return query;
 }
 
 const comparePrCycle = (pastData,data) => {
@@ -489,5 +446,6 @@ export {
     calculatePrCycle,
     calculatePrTimeTaken,
     comparePrCycle,
-    getQuery
+
+    getPrCount,
 }

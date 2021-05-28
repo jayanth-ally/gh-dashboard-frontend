@@ -9,6 +9,7 @@ import Loading from '../loading/loading';
 import * as http from '../../utils/http';
 import {addUsers} from '../../store/users/actions';
 import {addTeams,deleteTeam,selectTeam,updateTeam} from '../../store/teams/actions';
+import {getPrCount} from '../../utils/pr-calculations';
 
 import {edit,editGreen,deleteIcon,deleteRed} from '../../assets/svg/index';
 
@@ -26,14 +27,21 @@ const TeamDashboard = (props) => {
     const dispatch = useDispatch();
     const teams = useSelector(state => state.teams.all);
     const users = useSelector(state => state.users.all);
-    const [isLoading,setIsLoading] = useState(false);
+    const [isLoading,setIsLoading] = useState(true);
     const [showMenu,setShowMenu] = useState([]);
+    let range = {
+        from:convertDate(dateFormat(new DateObject().subtract(6,'days'))),
+        to:convertDate(dateFormat(new DateObject().add(1,'days')))
+    };
 
     useEffect(()=>{
         props.setNavKey(props.navKey);
     },[])
 
     useEffect(()=>{
+        if(teams.length > 0){
+            setIsLoading(false);
+        }
         let menu = [];
         teams.map((_)=>{
             menu.push(false);
@@ -59,15 +67,10 @@ const TeamDashboard = (props) => {
 
     const getAllTeams = () => {
         setIsLoading(true);
-        http.getTeams().then(async ({data}) => {
-            let allTeams = [];
-            await Promise.all(data.teams.map( async (team) => {
-                const _team =  await getAllPrsForTeam(team);
-                allTeams = [...allTeams,{..._team}];
-            }));
-            dispatch(addTeams(allTeams));       
+        http.getTeamsData(range).then(({data})=>{
+            dispatch(addTeams(data.teams));
             setIsLoading(false);
-        },(err)=>{
+        },err=>{
             setIsLoading(false);
         })
     }
@@ -86,31 +89,6 @@ const TeamDashboard = (props) => {
         e.stopPropagation();
         dispatch(deleteTeam(team));
         http.deleteTeam(team);
-    }
-
-    const getAllPrsForTeam = async (team) => {
-        let prs = [];
-        let data = [];
-        team.users.map((user)=>{
-            let i = users.findIndex(u => u.id === user.id);
-            users[i].prs.map(pr => {
-                let index = data.findIndex(d => d.repo.id === pr.repo.id);
-                let lastweek = new DateObject().subtract(6,"days");
-                if(pr.updatedAt >= convertDate(dateFormat(lastweek))){
-                    if(index === -1){
-                        data.push({repo:pr.repo,ids:[pr.id]});
-                    }else{
-                        data[index].ids.push(pr.id);
-                    }
-                }
-            })
-        });
-        
-        await Promise.all(data.map(async (d) => {
-            const {data} = await http.getPrsById(d.repo,d.ids);
-            prs = [...prs,...data.prs];
-        }));
-        return Object.assign({}, team, {prs});
     }
 
     const goToTeamPage = (team) => {
@@ -168,11 +146,9 @@ const TeamDashboard = (props) => {
                     {teams.length === 0 && <div className="empty-dashboard"><span>No Teams Found</span></div>} 
                     {teams.map((team,index)=>{
                         let graph = <></>;
-                        if(team.hasOwnProperty('prs')){
-                            const resultSet = calculatePrsByDate(team.prs);
-                            if(resultSet.count > 0){
-                                graph = <ReactECharts option={charts.getBarForNoOfPrs(team.prs)} />;
-                            }
+                        if(team.hasOwnProperty('result')){
+                            const result = team.result;
+                            graph = <ReactECharts option={charts.getBarForNoOfPrs(result)} />;
                         }
                         return <div key={index} className="col-md-6">
                             <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer" onClick={()=>goToTeamPage(team)}>

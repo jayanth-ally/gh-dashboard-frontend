@@ -4,7 +4,7 @@ const HEROKU_URL = "https://ally-ghdashboard-backend.herokuapp.com/api";
 const LOCALHOST_URL = "http://localhost:5000/api";
 
 // Base url
-const BASE_URL = HEROKU_URL;
+const BASE_URL = (!process.env.NODE_ENV || process.env.NODE_ENV==="development")?LOCALHOST_URL:HEROKU_URL;
 
 // API end points
 // GET
@@ -41,6 +41,12 @@ const GET_TEAMS_BY_ID = BASE_URL + "/teams"
 const UPDATE_TEAM = BASE_URL + "/team";
 const DELETE_TEAM = BASE_URL + "/team/delete";
 
+// DB Data
+const DATA_URL = BASE_URL + '/data';
+const ORG_DATA = DATA_URL + '/org';
+const TEAMS_DATA = DATA_URL + '/teams';
+const TEAM_DATA = DATA_URL + '/team';
+
 export {
     TESTING_API,
     GET_ALL_REPOS,
@@ -57,4 +63,8 @@ export {
     GET_TEAMS_BY_ID,
     UPDATE_TEAM,
     DELETE_TEAM,
+
+    ORG_DATA,
+    TEAMS_DATA,
+    TEAM_DATA,
 }

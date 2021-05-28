@@ -22,7 +22,7 @@ const ChartCardComponent = ({item,resultKey,expandOrCompress,expanded,teams=[]})
     let sortedTeams = getTopFiveTeams(teams,resultKey);
 
     const onChartClickEvent = (params) => {
-        const id = sortedTeams[params.dataIndex].id;
+        const id = sortedTeams[params.dataIndex]._id;
         history.push('/team/'+id);
     }
 
@@ -41,7 +41,7 @@ const ChartCardComponent = ({item,resultKey,expandOrCompress,expanded,teams=[]})
                 </div>
                 <hr/>
             </div>
-            <div className="card-body">
+            <div className="card-body chart-container">
                 <ReactECharts option={item.option(sortedTeams,resultKey)} onEvents={onEvents}/>
             </div>
             </>}
