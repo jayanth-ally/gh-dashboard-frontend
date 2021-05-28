@@ -13,13 +13,13 @@ const getRepos = async () => {
     return res;
 }
 
-const getUsers = async () => {
-    const res = await axios.get(endpoint.GET_ALL_USERS);
+const getUsers = async (range) => {
+    const res = await axios.post(endpoint.GET_ALL_USERS,{range});
     return res;
 }
 
-const getUserById = async (id) => {
-    const res = await axios.get(endpoint.GET_USER_BY_ID+'/'+id);
+const getUserById = async (range,ids) => {
+    const res = await axios.post(endpoint.GET_USER_BY_ID,{range,ids});
     return res;
 }
 
@@ -88,6 +88,11 @@ const getTeamData = async (range,id) => {
     return res;
 }
 
+const getPrsData = async (repo,range) => {
+    const res = await axios.post(endpoint.PRS_DATA,{repo,range});
+    return res;
+}
+
 export {
     getRepos,
     getUsers,
@@ -104,5 +109,6 @@ export {
 
     getOrgData,
     getTeamsData,
-    getTeamData
+    getTeamData,
+    getPrsData
 }

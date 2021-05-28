@@ -13,7 +13,7 @@ const repos = createSlice({
     extraReducers:{
         [addReposAction.type]: (repos,{payload}) => {
             payload.all.map((repo)=>{
-                repos.all.push({...repo,prs:[],pastPrs:[]});
+                repos.all.push({...repo,prs:{}});
             })
             return repos;
         },

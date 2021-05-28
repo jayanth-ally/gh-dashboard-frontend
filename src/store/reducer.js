@@ -1,7 +1,7 @@
 import reposReducer from './repos/reducer';
 import usersReducer from './users/reducer';
 import teamsReducer from './teams/reducer';
-import prsReducer from './prs/reducer';
+import orgDataReducer from './org/reducer';
 const {combineReducers} = require('@reduxjs/toolkit');
 
 
@@ -9,7 +9,7 @@ const reducer = combineReducers({
     repos:reposReducer,
     users:usersReducer,
     teams:teamsReducer,
-    prs:prsReducer,
+    org:orgDataReducer,
 });
 
 export default reducer;
