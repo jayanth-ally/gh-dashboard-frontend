@@ -2,6 +2,7 @@ import { useState,useEffect } from "react";
 import { useDispatch,useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import ReactECharts from 'echarts-for-react';
+import {DateObject} from 'react-multi-date-picker';
 
 import Loading from "../loading/loading";
 import CircleIndicator from '../common/circleIndicator';
@@ -15,7 +16,7 @@ import {
 } from '../../config/routes';
 
 import {calculatePrsByDate} from '../../utils/pr-calculations';
-import { convertTime } from "../../utils/time-conversion";
+import { convertDate, convertTime, dateFormat } from "../../utils/time-conversion";
 import * as charts from '../../utils/chart-conversion';
 
 const PrDashboard = (props) => {
@@ -31,27 +32,36 @@ const PrDashboard = (props) => {
         if(repos.length === 0){
             setIsLoading(true);
             http.getRepos().then(({data}) => {
-                dispatch(addRepos(data.repos)); 
-                data.repos.map((repo,i)=>{
-                    setIsLoading(true);
-                    http.getPrsByDate(repo).then(({data}) => {
-                        dispatch(addPrs(repo,data.prs));  
-                        if(i === repos.length-1){
-                            setIsLoading(false);
-                        }
-                    },err => {
-                        if(i === repos.length-1){
-                            setIsLoading(false);
-                        }
-                    })
-                })          
+                dispatch(addRepos(data.repos));     
                 setIsLoading(false);
             },(err)=>{
                 setIsLoading(false);
             })
         }
-        
     },[dispatch])
+
+    useEffect(()=>{
+        if(repos.length > 0 && !repos[0].prs.hasOwnProperty('result')){
+            setIsLoading(true);
+            repos.map((repo)=>{
+                const range = {
+                    from: convertDate(dateFormat(new DateObject().subtract(6,'days'))),
+                    to: convertDate(dateFormat(new DateObject().add(1,'days'))),
+                }
+                const r = {
+                    id:repo.id,
+                    owner:repo.owner,
+                    name:repo.name
+                };
+                http.getPrsData(r,range).then(({data})=>{
+                    dispatch(addPrs(r,data.prs));
+                    setIsLoading(false);
+                },(err)=>{
+                    setIsLoading(false);
+                }) 
+            })    
+        }
+    },[repos]);
 
     const repoOnClick = (repo) => {
         dispatch(selectRepo(repo));
@@ -77,7 +87,7 @@ const PrDashboard = (props) => {
             <div className="container">
                 <div className="flex-container row">
                     {repos.map((repo)=>{
-                        if(repo.prs.length > 0){
+                        if(repo.prs.hasOwnProperty('result')){
                             return (<div className="col-md-4" key={repo.id}>
                             <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer" onClick={()=>repoOnClick(repo)}>
                                 <div className="card-head">
@@ -85,7 +95,7 @@ const PrDashboard = (props) => {
                                     <hr/>
                                 </div>
                                 <div className="card-body">
-                                        <ReactECharts option={charts.getBarForNoOfPrs(repo.prs)} />
+                                        <ReactECharts option={charts.getBarForNoOfPrs(repo.prs.result)} />
                                 </div>
                             </div>
                         </div>);

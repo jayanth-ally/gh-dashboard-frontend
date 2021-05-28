@@ -7,7 +7,7 @@ import ChartCard from '../common/chartCard/index';
 import Loading from '../loading/loading';
 
 import * as http from '../../utils/http';
-import {dateFormat} from '../../utils/time-conversion';
+import {dateFormat, getNextDate} from '../../utils/time-conversion';
 import {calculatePrsByDate} from '../../utils/pr-calculations';
 import {defaultArr,multiArr} from '../../config/chat-items';
 import * as charts from '../../utils/chart-conversion';
@@ -46,16 +46,16 @@ const PR = (props) => {
         valArr[i] = val;
         setValues([...valArr]);
         setIsLoading(true);
-        http.getPrsByDate(
+        http.getPrsData(
             {
                 id:repo.id,
                 name:repo.name,
                 owner:repo.owner
             },{
                 from:dateFormat(val[0]),
-                to:dateFormat(val[1])
+                to: getNextDate(dateFormat(val[1]))
             }).then(({data})=>{
-                if(data.prs.length > 0){
+                if(data.prs.hasOwnProperty('result')){
                     let prArr = prs;
                     prArr[i] = data.prs;
                     setPrs([...prArr]);
@@ -81,13 +81,13 @@ const PR = (props) => {
     }
 
     const DefaultCharts = () => {
-        return prs.length === 1 && prs[0].length > 0?(
+        return prs.length === 1 && prs[0].hasOwnProperty('result')?(
             <div className="container">
                 <div className="flex-container row">
                     {defaultArr.map((item,index)=>{
                         return <ChartCard key={index}
                             item={item}
-                            prs={prs[0]}
+                            result={prs[0].result}
                             range={values}
                         />
                     })}
@@ -103,7 +103,7 @@ const PR = (props) => {
                 {multiArr.map((item,index)=>{
                         return <ChartCard key={index}
                             item={item}
-                            prs={prs}
+                            result={prs}
                             range={values}
                         />
                     })}

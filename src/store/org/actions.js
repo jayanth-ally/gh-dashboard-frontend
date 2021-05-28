@@ -1,6 +1,6 @@
 import {createAction} from '@reduxjs/toolkit';
 
-const addOrgDataAction = createAction("ord/ADD_ORG_DATA");
+const addOrgDataAction = createAction("org/ADD_ORG_DATA");
 const clearOrgDataAction = createAction("org/CLEAR_ORG_DATA");
 
 const addOrgData = (data) => {

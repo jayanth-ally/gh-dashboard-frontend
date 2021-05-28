@@ -47,6 +47,8 @@ const GET_USER_BY_ID = BASE_URL + "/user";
 
 const TEAMS_DATA = DATA_URL + '/teams';
 const TEAM_DATA = DATA_URL + '/team';
+// params:{repo,range}
+const PRS_DATA = DATA_URL + '/pulls';
 
 export {
     TESTING_API,
@@ -68,4 +70,5 @@ export {
     ORG_DATA,
     TEAMS_DATA,
     TEAM_DATA,
+    PRS_DATA,
 }

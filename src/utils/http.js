@@ -88,6 +88,11 @@ const getTeamData = async (range,id) => {
     return res;
 }
 
+const getPrsData = async (repo,range) => {
+    const res = await axios.post(endpoint.PRS_DATA,{repo,range});
+    return res;
+}
+
 export {
     getRepos,
     getUsers,
@@ -104,5 +109,6 @@ export {
 
     getOrgData,
     getTeamsData,
-    getTeamData
+    getTeamData,
+    getPrsData
 }
