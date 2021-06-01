@@ -13,13 +13,13 @@ const getRepos = async () => {
     return res;
 }
 
-const getUsers = async (range) => {
-    const res = await axios.post(endpoint.GET_ALL_USERS,{range});
+const getUsers = async () => {
+    const res = await axios.get(endpoint.GET_ALL_USERS);
     return res;
 }
 
-const getUserById = async (range,ids) => {
-    const res = await axios.post(endpoint.GET_USER_BY_ID,{range,ids});
+const getUserById = async (range,id) => {
+    const res = await axios.post(endpoint.GET_USER_BY_ID,{range,id});
     return res;
 }
 
@@ -73,18 +73,23 @@ const getTeamsById = async (ids) => {
     return res;
 }
 
-const getOrgData = async (range,prevRange) => {
-    const res = await axios.post(endpoint.ORG_DATA,{range,prevRange});
+const getOrgData = async () => {
+    const res = await axios.get(endpoint.ORG_DATA);
     return res;
 }
 
-const getTeamsData = async (range) => {
-    const res = await axios.post(endpoint.TEAMS_DATA,{range});
+const getTeamsData = async () => {
+    const res = await axios.get(endpoint.TEAMS_DATA);
     return res;
 }
 
 const getTeamData = async (range,id) => {
     const res = await axios.post(endpoint.TEAM_DATA,{range,id});
+    return res;
+}
+
+const getTeamDataByRange = async (range,id) => {
+    const res = await axios.post(endpoint.TEAM_DATA_BY_RANGE,{range,id});
     return res;
 }
 
@@ -110,5 +115,6 @@ export {
     getOrgData,
     getTeamsData,
     getTeamData,
-    getPrsData
+    getTeamDataByRange,
+    getPrsData,
 }

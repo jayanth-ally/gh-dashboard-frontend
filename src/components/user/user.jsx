@@ -10,7 +10,7 @@ import Loading from '../loading/loading';
 
 import {selectUser, updateUser} from '../../store/users/actions';
 import * as http from '../../utils/http';
-import {convertDate, convertTimeToDays, dateFormat, getRangeFromDateObject} from '../../utils/time-conversion';
+import {convertDate, convertTimeToDays, dateFormat, getRangeFromDateObject,getPreviousRange} from '../../utils/time-conversion';
 import {defaultArr,multiArr} from '../../config/chat-items';
 import CircleIndicator from "../common/circleIndicator";
 import { ALL_USERS_ROUTE, HOME_ROUTE } from "../../config/routes";
@@ -40,7 +40,6 @@ const User = (props) => {
             }else{
                 const usr = allUsers[index];
                 dispatch(selectUser(usr));
-                setUsers([user])
             }
         }else{
             props.history.replace(HOME_ROUTE);
@@ -48,11 +47,11 @@ const User = (props) => {
     },[allUsers])
 
     useEffect(()=>{
-        if(!(user.hasOwnProperty('prs'))){
+        if(!(user.hasOwnProperty('values'))){
             setIsLoading(true);
             const range = getRangeFromDateObject(values[0]);
             http.getUserById(range,[user.id]).then(({data}) => {
-                dispatch(updateUser(data.users[0]));           
+                dispatch(updateUser(data.doc));           
                 setIsLoading(false);
             },(err)=>{
                 setIsLoading(false);
@@ -61,10 +60,33 @@ const User = (props) => {
     },[dispatch])
 
     useEffect(()=>{
-        if(user.hasOwnProperty('id')){
+        if(user.hasOwnProperty('values')){
             setIsLoading(false);
+            let usr = getUserData(user,values[0]);
+            setUsers([usr])
         }
     },[user])
+
+    const getUserData = (usr,rng) => {
+        let range1 = getRangeFromDateObject(rng);
+        let prevRange1 = getPreviousRange(range1);
+        const count = usr.count;
+        const userResult = usr.values.filter(val => val.range.from === range1.from && val.range.to === range1.to)[0];
+        const result = userResult.result;
+        const data = userResult.data;
+        const prs = userResult.prs;
+        const prevData = usr.values.filter(val => val.range.from === prevRange1.from && val.range.to === prevRange1.to)[0].result;
+        return {
+            id:usr.id,
+            login:usr.login,
+            avatarUrl:usr.avatarUrl,
+            count,
+            result,
+            data,
+            prs,
+            prevData
+        }
+    }
 
     const getUserDataByIndex = async (userIndex) => {
         let range = getRangeFromDateObject(values[userIndex]);
@@ -129,49 +151,12 @@ const User = (props) => {
     }
 
     const DefaultCharts = () => {
-        if(users.length === 1 && users[0].hasOwnProperty('count')){
-            // const result = calculatePrCycle(prs[0],{
-            //     from:convertDate(dateFormat(values[0][0])),
-            //     to:convertDate(dateFormat(values[0][1]))
-            // });
-
-            // const count = user.count;
-
-            // let from = convertDate(dateFormat(values[0][0]));
-            // let to = convertDate(dateFormat(values[0][1]));
-            // let result = calculatePrCycle(prs[0],{
-            //     from,
-            //     to,
-            //     prCycle:true,
-            // });
-            // let prForCycle = user.prs.filter((p)=> p.timeTaken > MIN_PR_CYCLE_TIME);
-            // let [totalTimeTaken,avgTimeTaken,maxTimeTaken] = calculatePrTimeTaken(prForCycle);
-            // let data = {
-            //     commits:0,
-            //     reverts:0,
-            //     resolved:0,
-            //     reviews:0,
-            //     avgCycle:convertTimeToDays(avgTimeTaken),
-            //     cycle:convertTimeToDays(result.timeTaken.avg),
-            //     reviewed:0,
-            // }
-            // const cycle = data.cycle;
-            // data.arr = prs[0];
-            // result = calculateMetrics(data.arr);
-            // data.commits = result.commits.total;
-            // data.reviews = result.reviews.total;
-            // data.reverts = result.commits.reverts;
-            // data.resolved = result.count.closed+result.count.merged;
-            // data.arr.map((d)=>{
-            //     if(d.reviewThreads.length > 0 || d.reviews > 0){
-            //         data.reviewed ++;
-            //     }
-            // })
-
+        if(users.length === 1 && users[0].hasOwnProperty('prs')){
+            console.log(users[0].prs);
             return <>
             <DataCircles 
-                current={users[0].data.result}
-                previous={users[0].prevData.result}
+                current={users[0].result}
+                previous={users[0].prevData}
                 tooltipData={{current:'last 7 days',previous:'previous 7 days'}}
             />
             <div className="container">
@@ -179,7 +164,7 @@ const User = (props) => {
                     <div className="col-md-12">
                         <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="card-body">
-                                <Collapsible trigger={"Pull Requests ("+user.prs.length+")"}>
+                                <Collapsible trigger={"Pull Requests ("+users[0].prs.length+")"}>
                                     <hr/>
                                     <table className="table pr-table">
                                         <thead>
@@ -237,7 +222,7 @@ const User = (props) => {
                     {defaultArr.map((item,index)=>{
                         return <ChartCard key={index}
                             item={item}
-                            result={users[0].result}
+                            result={users[0].data}
                             range={values}
                         />
                     })}
@@ -265,9 +250,20 @@ const User = (props) => {
         ):<></>;
     }
 
-    const count = user.count;
+    let count = {
+        total:0,
+        open:0,
+        closed:0,
+        merged:0
+    };
 
-    return isLoading || users.length === 0?<Loading/>:(<>
+    if(user.hasOwnProperty('values')){
+        count = user.count;
+    }
+
+
+
+    return isLoading || users.length === 0 ?<Loading/>:(<>
         <div className="breadcrumbs">
             <Link to={HOME_ROUTE}>Home</Link>
             <span>/</span>
@@ -351,8 +347,8 @@ const User = (props) => {
                     </div>
                 </div>
             </div>
-            {user.prs.length === 0 && <div style={{width:'100%',display:'flex',justifyContent:'center'}}>No PRs found</div>}
-            {user.prs.length > 0 && <>
+            {users[0].prs.length === 0 && <div style={{width:'100%',display:'flex',justifyContent:'center'}}>No PRs found</div>}
+            {users[0].prs.length > 0 && <>
                 <DefaultCharts />
                 <MultipleCharts/>
             </>}

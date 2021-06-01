@@ -5,7 +5,24 @@ import Loading from '../../loading/loading';
 
 import {topTeamsArr} from '../../../config/chat-items';
 
-const TopTeams = ({teamsData,tooltipData}) => {
+const TopTeams = ({teamsData,tooltipData,range}) => {
+    let teamArr = [];
+    teamsData.map((team,i)=>{
+        let result = {};
+        team.values.map((val)=>{
+            if(val.range.from === range.from && val.range.to === range.to){
+                result = val.result;
+            }
+        })
+        teamArr.push({
+            _id:team._id,
+            name:team.name,
+            range,
+            result
+        })
+        
+    })
+
     return <>
     <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 className="h2">Top Teams ({tooltipData.current})</h1>
@@ -18,7 +35,7 @@ const TopTeams = ({teamsData,tooltipData}) => {
                         key={i}
                         item={item}
                         resultKey={item.key}
-                        teams={teamsData}
+                        teams={teamArr}
                     />
                 })}
             </div>

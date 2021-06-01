@@ -2,8 +2,19 @@ import { deleteTeam } from './http';
 import { calculateMetrics, calculatePrCycle, calculatePrsByDate, getTopFiveTeams } from './pr-calculations';
 import {convertDate, convertTime, convertTimeToDays, dateFormat} from './time-conversion';
 
-const getBarForNoOfPrs = (result) => {
+const getBarForNoOfPrs = (resultObj) => {
+    let result = resultObj;
     const key = "count";
+    if(result === undefined){
+        result = {
+            count:{
+                total:0,
+                open:0,
+                closed:0,
+                merged:0
+            }
+        }
+    }
     let data = [];
     let series = [{
         type: 'bar',
@@ -137,8 +148,11 @@ const getStackedLineForPrs = ({resultSet},key) => {
     // [0] - total
     // [1] - avg
     // [2] - max
-    resultSet.map(({date,result})=>{
-        data.push(date);
+    let c=1;
+    resultSet.map(({date,by,result})=>{
+        data.push(by+' '+c);
+
+        c++;
         if(result.count.total > 0){
             series[0].data.push(result[key].total || 0);
             series[1].data.push(result[key].avg || 0);
@@ -215,8 +229,10 @@ const getStackedLineForFiles = ({resultSet}) => {
     }];
     // [0] - additions
     // [1] - deletions
-    resultSet.map(({date,result})=>{
-        data.push(date);
+    let c=1;
+    resultSet.map(({date,by,result})=>{
+        data.push(by+' '+c);
+        c++;
         if(result.count.total > 0){
             series[0].data.push(result[key].additions || 0);
             series[1].data.push(result[key].deletions || 0);
@@ -255,8 +271,10 @@ const getStackedLineForReverts = ({resultSet}) => {
         data:[]
     }];
     // [0] - reverts
-    resultSet.map(({date,result})=>{
-        data.push(date);
+    let c=1;
+    resultSet.map(({date,by,result})=>{
+        data.push(by+' '+c);
+        c++;
         if(result.count.total > 0){
             series[0].data.push(result.commits.reverts || 0);
         }else{
@@ -290,7 +308,7 @@ const getStackedLinesForMultiplePrs = (result,range,key='commits',innerKey='tota
     let series = [];
     let resultSet = [];
     if(key === "count" && innerKey === "total"){
-        // console.log(resultSet);
+        console.log(result);
     }
     range.map((value,i)=>{
         let rng = dateFormat(value[0])+" ~ "+dateFormat(value[1]); 
@@ -308,10 +326,10 @@ const getStackedLinesForMultiplePrs = (result,range,key='commits',innerKey='tota
     })
     let day = 1;
     result.map((item,index)=>{
-        const res = item.result;
+        const res = item.values.filter((val)=>val.range.from === range[index].from && val.range.to === range[index].to)[0].data;
         if(index===0){
-            res.resultSet.map(({date,result})=>{
-                days.push('day '+day);
+            res.resultSet.map(({date,by,result})=>{
+                days.push(by+' '+day);
                 day++;
             })
         }
@@ -429,7 +447,7 @@ const getHorizontalStackedBarsForTeamsPRCount = (teams=[]) => {
     let teamArr = [];
     teams.map((team)=>{
         teamArr.push({id:team._id,value:team.name});
-        let result = team.data.result;
+        let result = team.result;
 
         data.map((name,i)=>{
             series[i].data.push(result[key][name]);
@@ -509,7 +527,7 @@ const getHorizontalStackedBarsForTeamsPRCycle = (teams=[]) => {
     let teamArr = [];
     teams.map((team)=>{
         teamArr.push({id:team._id,value:team.name});
-        let result = team.data.result;
+        let result = team.result;
 
         data.map((name,i)=>{
             series[i].data.push(result[key]['avg']);
@@ -566,7 +584,7 @@ const getHorizontalStackedBarsForTeams = (teams=[],key="count") => {
         return {};
     }
 
-    let data = Object.keys(teams[0].data.result[key]);
+    let data = Object.keys(teams[0].result[key]);
     data = data.filter((d)=>d!== 'maxPr' && d!== 'count');
     if(key === 'prCycle'){
         data = ['avg']
@@ -583,7 +601,7 @@ const getHorizontalStackedBarsForTeams = (teams=[],key="count") => {
     let teamArr = [];
     teams.map((team)=>{
         teamArr.push(team.name);
-        let result = team.data.result;
+        let result = team.result;
 
         data.map((name,i)=>{
             if(key === 'prCycle'){

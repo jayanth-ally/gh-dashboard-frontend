@@ -88,9 +88,15 @@ const getTooltipData = (type,obj) => {
     }else if (type === 'months'){
         current = obj.name+' ('+obj.year+')';
         previous = obj.month === 0 ? 'DEC ('+(obj.year-1)+')' :MONTHS[obj.month - 1]+ ' ('+obj.year+')';
-    }else{
+    }else if(type === 'last'){
         current = 'last '+obj.days+' days';
         previous = 'previous '+obj.days+' days';
+    }else if(type === 'custom7'){
+        current = obj.days+' days';
+        previous = obj.days+' days';
+    }else if(type === 'custom15'){
+        current = obj.days+' days';
+        previous = obj.days+' days';
     }
     return {current,previous};
 }
@@ -101,6 +107,56 @@ const getRangeFromDateObject = (val) => {
         to:getNextDate(dateFormat(val[1]))
     }
     return range;
+}
+
+const getPreviousRange = (range) => {
+    let from = new Date(range.from);
+    let to = new Date(range.to);
+
+    let month = from.getMonth()+1;
+    let year = from.getFullYear();
+    const diff = Math.floor(Math.abs(to - from) / (1000 * 60 * 60 * 24));
+    if(diff > 60){
+        let mul = 0;
+        if(month < 3){
+            mul = 1;
+        }else if(month < 6){
+            mul = 2
+        }else if(month < 9){
+            mul = 3;
+        }else{
+            mul = 4;
+        }
+        let prevYear = year;
+        mul--;
+        if(mul === 0){
+            prevYear--;
+            mul = 4;
+        }
+        let prevMonth = mul * 3;
+
+        let prevFrom = convertDate('01-'+MONTHS[prevMonth - 3]+'-'+prevYear);
+        let prevTo = convertDate(from);
+        return {from:prevFrom,to:prevTo}
+    }else if(diff > 20){
+        let prevMonth = month - 1;
+        let prevYear = year;
+        
+        if(month === 0){
+            prevMonth = 11;
+            prevYear--;
+        }
+
+        let prevFrom = convertDate('01-'+MONTHS[prevMonth-1]+'-'+prevYear);
+        let prevTo = convertDate(from);
+
+        return {from:prevFrom,to:prevTo}
+    }else{
+        to = convertDate(from);
+        from.setDate(from.getDate() - diff);
+        from = convertDate(from);
+        return {from,to};
+    }
 }
 
 export {
@@ -116,4 +172,5 @@ export {
     getPreviousDate,
     getTooltipData,
     getRangeFromDateObject,
+    getPreviousRange
 }
