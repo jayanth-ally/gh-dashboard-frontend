@@ -21,47 +21,59 @@ import * as charts from '../../utils/chart-conversion';
 
 const PrDashboard = (props) => {
     const dispatch = useDispatch();
-    const repos = useSelector(state => state.repos.all || []);
+    // const repos = useSelector(state => state.repos.all || []);
+    const orgData = useSelector(state => state.org.data.org || []);
     const [isLoading,setIsLoading] = useState(false);
+
+    let range = {
+        from:convertDate(dateFormat(new DateObject().subtract(6,'days'))),
+        to:convertDate(dateFormat(new DateObject().add(1,'days')))
+    };
+    const [repos,setRepos] = useState([]);
 
     useEffect(()=>{
         props.setNavKey(props.navKey);
     },[])
 
-    useEffect(()=>{
-        if(repos.length === 0){
-            setIsLoading(true);
-            http.getRepos().then(({data}) => {
-                dispatch(addRepos(data.repos));     
-                setIsLoading(false);
-            },(err)=>{
-                setIsLoading(false);
-            })
-        }
-    },[dispatch])
+    // useEffect(()=>{
+    //     if(repos.length === 0){
+    //         setIsLoading(true);
+    //         http.getRepos().then(({data}) => {
+    //             dispatch(addRepos(data.repos));     
+    //             setIsLoading(false);
+    //         },(err)=>{
+    //             setIsLoading(false);
+    //         })
+    //     }
+    // },[dispatch])
 
     useEffect(()=>{
-        if(repos.length > 0 && !repos[0].prs.hasOwnProperty('result')){
-            setIsLoading(true);
-            repos.map((repo)=>{
-                const range = {
-                    from: convertDate(dateFormat(new DateObject().subtract(6,'days'))),
-                    to: convertDate(dateFormat(new DateObject().add(1,'days'))),
-                }
-                const r = {
-                    id:repo.id,
-                    owner:repo.owner,
-                    name:repo.name
-                };
-                http.getPrsData(r,range).then(({data})=>{
-                    dispatch(addPrs(r,data.prs));
-                    setIsLoading(false);
-                },(err)=>{
-                    setIsLoading(false);
-                }) 
-            })    
-        }
-    },[repos]);
+        let r = orgData.filter((val) => val.range.from === range.from && val.range.to === range.to)[0].data;
+        setRepos(r);
+    },[orgData])
+
+    // useEffect(()=>{
+    //     if(repos.length > 0 && !repos[0].prs.hasOwnProperty('result')){
+    //         setIsLoading(true);
+    //         repos.map((repo)=>{
+    //             const range = {
+    //                 from: convertDate(dateFormat(new DateObject().subtract(6,'days'))),
+    //                 to: convertDate(dateFormat(new DateObject().add(1,'days'))),
+    //             }
+    //             const r = {
+    //                 id:repo.id,
+    //                 owner:repo.owner,
+    //                 name:repo.name
+    //             };
+    //             http.getPrsData(r,range).then(({data})=>{
+    //                 dispatch(addPrs(r,data.prs));
+    //                 setIsLoading(false);
+    //             },(err)=>{
+    //                 setIsLoading(false);
+    //             }) 
+    //         })    
+    //     }
+    // },[repos]);
 
     const repoOnClick = (repo) => {
         dispatch(selectRepo(repo));
@@ -79,27 +91,26 @@ const PrDashboard = (props) => {
             <h1 className="h2">PR Dashboard (Last 7 days)</h1>
             <div className="btn-toolbar mb-2 mb-md-0">
                 <div className="btn-group mr-2">
-                    <button className="btn btn-sm btn-outline-secondary">Filter</button>
+                    
                 </div>
             </div>
         </div>
         <div className="home-body py-5 bg-alice-blue">
             <div className="container">
                 <div className="flex-container row">
-                    {repos.map((repo)=>{
-                        if(repo.prs.hasOwnProperty('result')){
-                            return (<div className="col-md-4" key={repo.id}>
-                            <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer" onClick={()=>repoOnClick(repo)}>
-                                <div className="card-head">
-                                    <h3 className="h3-text">{repo.owner+'/'+repo.name}</h3>
-                                    <hr/>
-                                </div>
-                                <div className="card-body">
-                                        <ReactECharts option={charts.getBarForNoOfPrs(repo.prs.result)} />
-                                </div>
+                    {repos.map((r)=>{
+                        const repo = r.repo;
+                        return (<div className="col-md-4" key={repo.id}>
+                        <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer" onClick={()=>repoOnClick(repo)}>
+                            <div className="card-head">
+                                <h3 className="h3-text">{repo.owner+'/'+repo.name}</h3>
+                                <hr/>
                             </div>
-                        </div>);
-                        }
+                            <div className="card-body">
+                                    <ReactECharts option={charts.getBarForNoOfPrs(r)} />
+                            </div>
+                        </div>
+                    </div>);
                     })}
                 </div>
             </div>

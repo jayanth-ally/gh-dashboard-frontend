@@ -7,9 +7,10 @@ import HtmlTooltip from '../common/htmlTooltip/index';
 
 import ChartCard from '../common/chartCard/index';
 import Loading from '../loading/loading';
+import TeamTimeline from "./timeline";
 
 import * as http from '../../utils/http';
-import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject} from '../../utils/time-conversion';
+import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject,getPreviousRange,getTooltipData} from '../../utils/time-conversion';
 import {defaultArr,multiArr} from '../../config/chat-items';
 import CircleIndicator from "../common/circleIndicator";
 import { selectTeam } from "../../store/teams/actions";
@@ -18,7 +19,7 @@ import UserCards from "../user/userCards";
 import { selectUser } from "../../store/users/actions";
 
 import {info} from '../../assets/svg/index';
-import DataCircles from "../common/dataCircle/dataCircles";
+import DataCircles from "../common/dataCircle/dataCircles"; 
 
 const Team = (props) => {
     const dispatch = useDispatch();
@@ -31,13 +32,15 @@ const Team = (props) => {
     const [prs,setPrs] = useState([]);
     const [isLoading,setIsLoading] = useState(true);
     const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
+    const [selectedTimeline,setSelectedTimeline] = useState([{key:'last',value:{days:7}}])
+    const [tooltip,setTooltip] = useState({current:'last 7 days',previous:'Previous 7 days'});
 
     useEffect(()=>{
         props.setNavKey(props.navKey);
     },[])
 
     useEffect(()=>{
-        if(selectedTeam.hasOwnProperty('data')){
+        if(selectedTeam.hasOwnProperty('values')){
             setIsLoading(false);
         }
     },[selectedTeam])
@@ -51,17 +54,90 @@ const Team = (props) => {
                 const team = allTeams[index];
                 dispatch(selectTeam(team));
                 setTitle(team.name);
-                setTeams([team])
-                let prArr = [];
-                team.users.map((user)=>{
-                    let i = users.findIndex((u)=> u.id === user.id);
-                    let usr = users[i];
-                    prArr = [...prArr,...usr.prs];
-                })
-                setPrs(prArr);
+                const tm = getTeam(team,values[0]);
+                setTeams([tm])
             }
         }
     },[allTeams])
+
+    const getTeam = (tm,rng) => {
+        let range1 = getRangeFromDateObject(rng);
+        let prevRange1 = getPreviousRange(range1);
+
+        if(tm && tm.hasOwnProperty('data')){
+            return tm;
+        }
+        const teamResult = tm.values.filter(val => val.range.from === range1.from && val.range.to === range1.to)[0];
+        if(teamResult){
+            const result = teamResult.result;
+            const data = teamResult.data;
+            const prevData = tm.values.filter(val => val.range.from === prevRange1.from && val.range.to === prevRange1.to)[0].result;
+            return {
+                _id:tm._id,
+                name:tm.name,
+                count:tm.count,
+                users:tm.users,
+                range:range1,
+                result,
+                data,
+                prevData
+            }
+        }else{
+            console.log('invalid result');
+            console.log(range1,prevRange1,tm);
+        }
+    }
+
+    const getTeamFromApi = (t_id,index,val) =>{
+        let from = val[0];
+        let to = val[1];
+        let range = {
+            from: convertDate(dateFormat(from)),
+            to: getNextDate(dateFormat(to))
+        }
+        let tmrng = teams[index];
+        let teamRange = range;
+        if(tmrng !== undefined){
+            teamRange = tmrng.range;
+        }
+        if(tmrng._id !== t_id || teamRange.from !== convertDate(dateFormat(values[index][0])) || teamRange.to !== getNextDate(dateFormat(values[index][1]))){
+            setIsLoading(true);
+            http.getTeamDataByRange(range,t_id).then(({data})=>{
+                let tms = teams;
+                tms[index] = data.team;
+                setTeams([...tms])
+                setIsLoading(false);
+            },err => setIsLoading(false))
+        }
+    }
+
+    const onTimelineChanged = (val,t_id,index,type,obj) => {
+        setTooltip(getTooltipData(type,obj));
+        let tl = selectedTimeline;
+        tl[index] = {key:type,value:obj};
+        setSelectedTimeline([...tl])
+
+        let ranges = values;
+
+        let from = new DateObject({date:new Date(val.range.from)});
+        let to = new DateObject({date:new Date(val.range.to)}).subtract(1,'days');
+        ranges[index] = [from,to];
+        if(type === 'custom7' || type === 'custom15'){
+            getTeamFromApi(t_id,index,[from,to]);
+        }else{
+            const tm1 = allTeams.filter((tm)=>tm._id === t_id)[0];
+            const tm = getTeam(tm1,[from,to]);
+            let tms = teams;
+            tms[index] = tm;
+            setTeams([...tms])
+        } 
+        setValues([...ranges])
+
+        // if(val.range.from !== range.from || val.range.to !== range.to){
+        //     setRange({...val.range});
+        //     setPrevRange({...val.prevRange});
+        // }
+    }
 
     const getTeamDataByIndex = async (teamIndex) => {
         let range = {
@@ -94,6 +170,7 @@ const Team = (props) => {
     const addComparisions = () => {
         setValues([...values,values[0]]);
         setTeams([...teams,teams[0]]);
+        setSelectedTimeline([...selectedTimeline,selectedTimeline[0]])
     }
 
     const removeComparison = (i) => {
@@ -103,10 +180,12 @@ const Team = (props) => {
         let teamsState = teams;
         teamsState.splice(i,1);
         setTeams([...teamsState]);
+        let stl = selectedTimeline;
+        stl.splice(i,1);
+        setSelectedTimeline([...stl]);
     }
 
-    const onTeamSelected = (e,i) => {
-        let id = e.target.value;
+    const onTeamSelected = (id,i,selectedTime) => {
         let arr = teams;
         let team = teams[0];
         allTeams.map((t)=>{
@@ -114,25 +193,50 @@ const Team = (props) => {
                 team = t;
             }
         });
-        arr[i]=team;
-        setTeams([...arr]);
-        setIsLoading(true);
-        getTeamDataByIndex(i).then((team) => {
-            let teamArr = teams;
-            teamArr[i] = team;
-            setTeams([...teamArr]);
-            setIsLoading(false);
-        },(err)=>{
-            setIsLoading(false);
-        })
+        if(selectedTime === 'custom7' || selectedTime === 'custom15'){
+            getTeamFromApi(id,i,values[i]);
+        }else{
+            arr[i]=getTeam(team,values[i]);
+            setTeams([...arr]);
+        }        
+        // setIsLoading(true);
+        // getTeamDataByIndex(i).then((team) => {
+        //     let teamArr = teams;
+        //     teamArr[i] = team;
+        //     setTeams([...teamArr]);
+        //     setIsLoading(false);
+        // },(err)=>{
+        //     setIsLoading(false);
+        // })
     }
+    // const onTeamSelected = (e,i) => {
+    //     let id = e.target.value;
+    //     let arr = teams;
+    //     let team = teams[0];
+    //     allTeams.map((t)=>{
+    //         if(t._id === id){
+    //             team = t;
+    //         }
+    //     });
+    //     arr[i]=team;
+    //     setTeams([...arr]);
+    //     setIsLoading(true);
+    //     getTeamDataByIndex(i).then((team) => {
+    //         let teamArr = teams;
+    //         teamArr[i] = team;
+    //         setTeams([...teamArr]);
+    //         setIsLoading(false);
+    //     },(err)=>{
+    //         setIsLoading(false);
+    //     })
+    // }
 
     const onEditTeam = () => {
         props.history.push(EDIT_TEAM_ROUTE);
     }
 
     const DefaultCharts = () => {
-        if(teams.length === 1 && selectedTeam.hasOwnProperty('result')){
+        if(teams.length === 1 && selectedTeam.hasOwnProperty('values')){
             const onUserClicked = (id) => {
                 const userIndex = users.findIndex((user) => user.id === id);
                 dispatch(selectUser(users[userIndex]));
@@ -141,8 +245,8 @@ const Team = (props) => {
 
             return <>
             <DataCircles 
-                current={teams[0].data.result}
-                previous={teams[0].prevData.result}
+                current={teams[0].result}
+                previous={teams[0].prevData}
                 tooltipData={{current:'last 7 days',previous:'previous 7 days'}}
             />
             <div className="container">
@@ -169,6 +273,28 @@ const Team = (props) => {
                             </div>
                         </div>
                     </div>
+                    <div className="col-md-12">
+                        <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                            <div className="card-body">
+                                <Collapsible trigger="Users - Top 3">
+                                    <hr/>
+                                    <div className="all-user-cards bg-alice-blue">
+                                        {selectedTeam.users.map((user,i)=>{
+                                            return <UserCards 
+                                                key={i} 
+                                                size="200px"
+                                                imgSize="40px"
+                                                id={user.id}
+                                                avatar={user.avatarUrl}
+                                                login={user.login}
+                                                selectUser={()=>onUserClicked(user.id)}
+                                            />
+                                        })}
+                                    </div>
+                                </Collapsible>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div className="container">
@@ -176,7 +302,7 @@ const Team = (props) => {
                     {defaultArr.map((item,index)=>{
                         return <ChartCard key={index}
                             item={item}
-                            result={teams[0].result}
+                            result={teams[0].data}
                             range={values}
                         />
                     })}
@@ -267,16 +393,11 @@ const Team = (props) => {
             <div className="container">
                 <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white flex-container row" style={{padding:'15px',justifyContent:'space-evenly'}}>
                     {values.map((value,i)=>{
-                        return <div className="multi-date-picker" key={i}>
-                                <DatePicker value={value} onChange={(val)=>onDateChanged(val,i)} type="button" range showOtherDays hideOnScroll>
-                                    {i > 0 && <select value={teams[i]._id} onChange={(e)=>onTeamSelected(e,i)}>
-                                            {allTeams.map((team)=>{
-                                                return <option key={team._id} value={team._id}>{team.name}</option>
-                                            })}
-                                        </select>}
-                                    {i > 0 && <button className="btn btn-sm btn-outline-danger" onClick={()=>removeComparison(i)}>Delete</button>}
-                                </DatePicker>
-                        </div>
+                        if(i<teams.length){
+                            return <div className='timeline-picker' key={i}>
+                                    <TeamTimeline onValueChange={onTimelineChanged} selected={selectedTimeline} tname={{_id:teams[i]._id,name:teams[i].name}} teams={allTeams} index={i} val={value} removeComparison={removeComparison} onTeamSelected={onTeamSelected}/>
+                                </div>
+                        }
                     })}
                 </div>
             </div>

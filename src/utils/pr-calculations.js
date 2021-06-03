@@ -361,10 +361,10 @@ const getTopFiveTeams = (teams,metric="count") => {
     if(metric === "prCycle"){
         innerKey = "avg";
     }
-    arr = arr.sort((a,b)=>(a.data.result[metric][innerKey] < b.data.result[metric][innerKey])?1:(a.data.result[metric][innerKey] > b.data.result[metric][innerKey])?-1:0);
+    arr = arr.sort((a,b)=>(a.result[metric][innerKey] < b.result[metric][innerKey])?1:(a.result[metric][innerKey] > b.result[metric][innerKey])?-1:0);
     let topArr = [];
     if(metric === "prCycle"){
-        arr = arr.filter(a => a.data.result[metric][innerKey] >= MIN_PR_CYCLE_TIME);
+        arr = arr.filter(a => a.result[metric][innerKey] >= MIN_PR_CYCLE_TIME);
     }
     let len = arr.length;
     arr.map((team,i)=>{

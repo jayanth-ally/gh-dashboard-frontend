@@ -64,29 +64,57 @@ const HomeDashboard = (props) => {
         loadData();
     },[dispatch])
 
-    useEffect(()=>{
-        if((teams.length > 0 && (teams[0].data.range.from !== range.from || teams[0].data.range.to !== range.to))){
-            console.log(teams[0],range);
-            setLoadingData({
-                ...loadingData,
-                org:true,
-                teams:true
-            })
-            http.getOrgData(range,prevRange).then(({data})=>{
-                dispatch(addOrgData(({...data})));
-            })
-            http.getTeamsData(range).then(({data})=>{
-                dispatch(addTeams(data.teams));
-            })
-        }
-    },[range])
+    // useEffect(()=>{
+    //     if((teams.length > 0 && (teams[0].data.range.from !== range.from || teams[0].data.range.to !== range.to))){
+    //         setLoadingData({
+    //             ...loadingData,
+    //             org:true,
+    //             teams:true
+    //         })
+    //         http.getOrgData(range,prevRange).then(({data})=>{
+    //             dispatch(addOrgData(({...data})));
+    //         })
+    //         http.getTeamsData(range).then(({data})=>{
+    //             dispatch(addTeams(data.teams));
+    //         })
+    //     }
+    // },[range])
 
     useEffect(()=>{
-        setLoadingData({
-            ...loadingData,
-            org:false,
-        })
+        if(orgData.hasOwnProperty('today')){
+            setLoadingData({
+                ...loadingData,
+                org:false,
+            })
+        }
     },[orgData])
+
+    useEffect(()=>{
+        if(repos.length > 0){
+            setLoadingData({
+                ...loadingData,
+                repo:false,
+            })
+        }
+    },[repos])
+
+    useEffect(()=>{
+        if(users.length > 0){
+            setLoadingData({
+                ...loadingData,
+                users:false,
+            })
+        }
+    },[users])
+
+    useEffect(()=>{
+        if(teams.length > 0){
+            setLoadingData({
+                ...loadingData,
+                teams:false,
+            })
+        }
+    },[teams])
 
     // useEffect(()=>{
     //     if(teams.length > 0){
@@ -119,10 +147,6 @@ const HomeDashboard = (props) => {
             })
             http.getRepos().then(({data}) => {
                 dispatch(addRepos(data.repos)); 
-                setLoadingData({
-                    ...loadingData,
-                    repos:false,
-                })      
             },(err)=>{
                 setLoadingData({
                     ...loadingData,
@@ -131,7 +155,7 @@ const HomeDashboard = (props) => {
             })
         }
 
-        if(!orgData.hasOwnProperty('count')){
+        if(!orgData.hasOwnProperty('today')){
             setLoadingData({
                 ...loadingData,
                 org:true
@@ -147,24 +171,15 @@ const HomeDashboard = (props) => {
                 users:true,
             })
             http.getUsers(range).then(({data}) => {
-                dispatch(addUsers(data.users));           
-                getAllTeams();
-                setLoadingData({
-                    ...loadingData,
-                    users:false,
-                })
+                dispatch(addUsers(data.users));    
             },(err)=>{
                 setLoadingData({
                     ...loadingData,
                     users:false,
                 })
             })
-        }else{
-            getAllTeams();
         }
-    }
 
-    const getAllTeams = () => {
         if(teams.length === 0){
             setLoadingData({
                 ...loadingData,
@@ -172,10 +187,6 @@ const HomeDashboard = (props) => {
             })
             http.getTeamsData(range,prevRange).then(({data})=>{
                 dispatch(addTeams(data.teams));
-                setLoadingData({
-                    ...loadingData,
-                    teams:false,
-                })
             })
         }
     }
@@ -191,9 +202,9 @@ const HomeDashboard = (props) => {
             </div>
             
             {isLoading? <Loading />:(
-                orgData.hasOwnProperty('current')? <>
-                    <Organization orgData={orgData} tooltipData={tooltip}/>
-                    <TopTeams teamsData={teams} tooltipData={{current:'last 7 days'}}/>
+                orgData.hasOwnProperty('today')? <>
+                    <Organization orgData={orgData} tooltipData={tooltip} range={range} prevRange={prevRange}/>
+                    <TopTeams teamsData={teams} tooltipData={tooltip} range={range} />
                 </> : <Loading/>
             )}          
         </>

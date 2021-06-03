@@ -146,8 +146,8 @@ const TeamDashboard = (props) => {
                     {teams.length === 0 && <div className="empty-dashboard"><span>No Teams Found</span></div>} 
                     {teams.map((team,index)=>{
                         let graph = <></>;
-                        if(team.hasOwnProperty('result')){
-                            const result = team.result;
+                        if(team.hasOwnProperty('values')){
+                            const result = team.values.filter((val) => val.range.from === range.from && val.range.to === range.to)[0].result;
                             graph = <ReactECharts option={charts.getBarForNoOfPrs(result)} />;
                         }
                         return <div key={index} className="col-md-6">

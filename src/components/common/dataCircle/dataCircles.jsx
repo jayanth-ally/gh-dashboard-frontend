@@ -3,8 +3,8 @@ import { convertTimeToDays } from "../../../utils/time-conversion";
 
 const DataCircles = ({current,previous,tooltipData}) => {
 
-    // const currentCycle = convertTimeToDays(current.prCycle.avg);
-    // const previousCycle = convertTimeToDays(previous.prCycle.avg);
+    const currentCycle = convertTimeToDays(current.prCycle.avg);
+    const previousCycle = convertTimeToDays(previous.prCycle.avg);
 
     const currentResolved = current.count.closed + current.count.merged;
     const previousResolved = previous.count.closed + previous.count.merged;
@@ -13,8 +13,8 @@ const DataCircles = ({current,previous,tooltipData}) => {
         <div className="flex-container row">
                 <DataCircle 
                     title="PR Cycle"
-                    previous={previous.prCycle.cycle}
-                    current={current.prCycle.cycle}
+                    previous={previousCycle}
+                    current={currentCycle}
                     tooltipData={<p>
                         Average no of time to close a PR
                         <br/> ({tooltipData.previous} / {tooltipData.current})<br/>

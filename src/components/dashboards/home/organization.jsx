@@ -15,8 +15,18 @@ import './style.css';
 import DataCircle from '../../common/dataCircle';
 import DataCircles from '../../common/dataCircle/dataCircles';
 
-const Organization = ({orgData,tooltipData}) => {
-    const {current,previous,today} = orgData;
+const Organization = ({orgData,tooltipData,range,prevRange}) => {
+    const {today,org} = orgData;
+    let current = {};
+    let previous = {};
+    org.map((obj)=>{
+        if(obj.range.from === range.from && obj.range.to === range.to){
+            current = obj.result;
+        }
+        if(obj.range.from === prevRange.from && obj.range.to === prevRange.to){
+            previous = obj.result;
+        }
+    })
     return <>
     <div className="home-body py-5 bg-alice-blue">
         <DataCircles 
@@ -27,7 +37,7 @@ const Organization = ({orgData,tooltipData}) => {
         <div className="container">
             <div className="flex-container row">               
                 <ChartCard
-                    result={today}
+                    result={today[0]}
                     item={{...prsLastDay,name:' PRS in last 24hrs'}}
                 />
                 <ChartCard
