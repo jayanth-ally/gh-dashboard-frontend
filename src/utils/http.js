@@ -18,8 +18,13 @@ const getUsers = async () => {
     return res;
 }
 
-const getUserById = async (range,id) => {
-    const res = await axios.post(endpoint.GET_USER_BY_ID,{range,id});
+const getUserById = async (id) => {
+    const res = await axios.post(endpoint.GET_USER_BY_ID,{id});
+    return res;
+}
+
+const getUserByRange = async (range,ids) => {
+    const res = await axios.post(endpoint.GET_USER_BY_RANGE,{range,ids});
     return res;
 }
 
@@ -102,6 +107,7 @@ export {
     getRepos,
     getUsers,
     getUserById,
+    getUserByRange,
     getUsersById,
     getPrsByDate,
     getPrsById,

@@ -7,10 +7,11 @@ import HtmlTooltip from '../common/htmlTooltip/index';
 
 import ChartCard from '../common/chartCard/index';
 import Loading from '../loading/loading';
+import UserTimeline from './timeline';
 
 import {selectUser, updateUser} from '../../store/users/actions';
 import * as http from '../../utils/http';
-import {convertDate, convertTimeToDays, dateFormat, getRangeFromDateObject,getPreviousRange} from '../../utils/time-conversion';
+import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject,getPreviousRange,getTooltipData} from '../../utils/time-conversion';
 import {defaultArr,multiArr} from '../../config/chat-items';
 import CircleIndicator from "../common/circleIndicator";
 import { ALL_USERS_ROUTE, HOME_ROUTE } from "../../config/routes";
@@ -27,6 +28,8 @@ const User = (props) => {
     const [users,setUsers] = useState([]);
     const [isLoading,setIsLoading] = useState(false);
     const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
+    const [selectedTimeline,setSelectedTimeline] = useState([{key:'last',value:{days:7}}])
+    const [tooltip,setTooltip] = useState({current:'last 7 days',previous:'Previous 7 days'});
     
     useEffect(()=>{
         props.setNavKey(props.navKey);
@@ -40,17 +43,177 @@ const User = (props) => {
             }else{
                 const usr = allUsers[index];
                 dispatch(selectUser(usr));
+                getUser(usr,0,values[0]);
+                // if(tm.hasOwnProperty('count')){
+                //     setUsers([tm])
+                // }
             }
         }else{
             props.history.replace(HOME_ROUTE);
         }
     },[allUsers])
 
+    const getUser = (usr,i,rng) => {
+        let range1 = getRangeFromDateObject(rng);
+        let prevRange1 = getPreviousRange(range1);
+        if(!usr.hasOwnProperty('count')){
+            setIsLoading(true);
+            if(selectedTimeline === 'custom7' || selectedTimeline === 'custom15'){
+                http.getUserByRange(range1,[usr.id]).then(({data})=>{
+                    let d = data.users[0];
+                    let usrs = users;
+                    let u = {
+                        id:usr.id,
+                        login:usr.login,
+                        avatarUrl:usr.avatarUrl,
+                        count:d.count,
+                        prs:d.prs,
+                        range:range1,
+                        result:d.data.result,
+                        data:d.result,
+                        prevData:d.prevData
+                    };
+                    // console.log('d',u);
+                    if(usrs.length > 0){
+                        usrs[i] = u;
+                        setUsers([...usrs])
+                    }else{
+                        setUsers([u])
+                    }
+                    setIsLoading(false);
+                },err => setIsLoading(false))
+            }else{
+                http.getUserById(usr.id).then(({data})=>{
+                    getUser(data.doc,i,rng);
+                    setIsLoading(false);
+                },err => setIsLoading(false))
+            }
+            return {};
+        }else{
+            if(usr && usr.hasOwnProperty('data')){
+                let usrs = users;
+                let u = {
+                    id:usr.id,
+                    login:usr.login,
+                    avatarUrl:usr.avatarUrl,
+                    count:usr.count,
+                    prs:usr.prs,
+                    data:usr.result,
+                    result:usr.data.result,
+                    prevData:usr.prevData.result,
+                    range:range1
+                };
+                // console.log('usr',u);
+                if(usrs.length > 0){
+                    usrs[i] = u;
+                    setUsers([...usrs])
+                }else{
+                    setUsers([u])
+                }
+                return {};
+            }
+            const userResult = usr.values.filter(val => val.range.from === range1.from && val.range.to === range1.to)[0];
+            if(userResult){
+                let usrs = users;
+                const result = userResult.result;
+                const prs = userResult.prs;
+                const data = userResult.data;
+                const prevData = usr.values.filter(val => val.range.from === prevRange1.from && val.range.to === prevRange1.to)[0].result;
+                let u = {
+                    id:usr.id,
+                    login:usr.login,
+                    avatarUrl:usr.avataUrl,
+                    count:usr.count,
+                    prs,
+                    range:range1,
+                    result,
+                    data,
+                    prevData
+                }
+                // console.log('result',u);
+                if(usrs.length > 0){
+                    usrs[i] = u;
+                    setUsers([...usrs])
+                }else{
+                    setUsers([u])
+                }
+            }else{
+                console.log('invalid result');
+                console.log(range1,prevRange1,usr);
+            }
+        }
+    }
+
+    const getUserFromApi = (u_id,index,val) =>{
+        let from = val[0];
+        let to = val[1];
+        let range = {
+            from: convertDate(dateFormat(from)),
+            to: getNextDate(dateFormat(to))
+        }
+        let usrrng = users[index];
+        let userRange = range;
+        if(usrrng !== undefined){
+            userRange = usrrng.range;
+        }
+        if(usrrng.id !== u_id || userRange.from !== convertDate(dateFormat(values[index][0])) || userRange.to !== getNextDate(dateFormat(values[index][1]))){
+            console.log(userRange,getRangeFromDateObject(values[index]),range)
+            setIsLoading(true);
+            http.getUserByRange(range,[u_id]).then(({data})=>{
+                let usrs = users;
+                // console.log(data.users);
+                getUser(data.users[0],index,val);
+                // usrs[index] = u;
+                // setUsers([...usrs])
+                setIsLoading(false);
+            },err => setIsLoading(false))
+        }
+    }
+
+    const onTimelineChanged = (val,u_id,index,type,obj) => {
+        setTooltip(getTooltipData(type,obj));
+        let tl = selectedTimeline;
+        tl[index] = {key:type,value:obj};
+        setSelectedTimeline([...tl])
+
+        let ranges = values;
+
+        let from = new DateObject({date:new Date(val.range.from)});
+        let to = new DateObject({date:new Date(val.range.to)}).subtract(1,'days');
+        ranges[index] = [from,to];
+        if(type === 'custom7' || type === 'custom15'){
+            getUserFromApi(u_id,index,[from,to]);
+        }else{
+            const tm1 = allUsers.filter((tm)=>tm.id === u_id)[0];
+            getUser(tm1,index,[from,to]);
+            // let tms = users;
+            // tms[index] = tm;
+            // setUsers([...tms])
+        } 
+        setValues([...ranges])
+    }
+
+    const onUserSelected = (id,i,selectedTime) => {
+        let arr = users;
+        let usr = users[0];
+        allUsers.map((t)=>{
+            if(t._id === id){
+                usr = t;
+            }
+        });
+        if(selectedTime === 'custom7' || selectedTime === 'custom15'){
+            getUserFromApi(id,i,values[i]);
+        }else{
+            getUser(usr,i,values[i]);
+            // setUsers([...arr]);
+        }        
+    }
+
     useEffect(()=>{
         if(!(user.hasOwnProperty('values'))){
             setIsLoading(true);
             const range = getRangeFromDateObject(values[0]);
-            http.getUserById(range,[user.id]).then(({data}) => {
+            http.getUserById(user.id).then(({data}) => {
                 dispatch(updateUser(data.doc));           
                 setIsLoading(false);
             },(err)=>{
@@ -62,8 +225,8 @@ const User = (props) => {
     useEffect(()=>{
         if(user.hasOwnProperty('values')){
             setIsLoading(false);
-            let usr = getUserData(user,values[0]);
-            setUsers([usr])
+            getUser(user,0,values[0]);
+            // setUsers([usr])
         }
     },[user])
 
@@ -117,6 +280,7 @@ const User = (props) => {
     const addComparisions = () => {
         setValues([...values,values[0]]);
         setUsers([...users,users[0]]);
+        setSelectedTimeline([...selectedTimeline,selectedTimeline[0]])
     }
 
     const removeComparison = (i) => {
@@ -126,33 +290,36 @@ const User = (props) => {
         let usersState = users;
         usersState.splice(i,1);
         setUsers([...usersState]);
+        let stl = selectedTimeline;
+        stl.splice(i,1);
+        setSelectedTimeline([...stl]);
     }
 
-    const onUserSelected = (e,i) => {
-        let id = e.target.value;
-        let arr = users;
-        let usr = users[0];
-        allUsers.map((u)=>{
-            if(u.id === id){
-                usr = u;
-            }
-        });
-        arr[i]=usr;
-        console.log('updated user',arr);
-        setUsers([...arr]);
-        getUserDataByIndex(i).then(usr => {
-            let userArr = users;
-            userArr[i] = usr;
-            setUsers([...userArr]);
-            setIsLoading(false);
-        },(err)=>{
-            setIsLoading(false);
-        })
-    }
+    // const onUserSelected = (e,i) => {
+    //     let id = e.target.value;
+    //     let arr = users;
+    //     let usr = users[0];
+    //     allUsers.map((u)=>{
+    //         if(u.id === id){
+    //             usr = u;
+    //         }
+    //     });
+    //     arr[i]=usr;
+    //     console.log('updated user',arr);
+    //     setUsers([...arr]);
+    //     getUserDataByIndex(i).then(usr => {
+    //         let userArr = users;
+    //         userArr[i] = usr;
+    //         setUsers([...userArr]);
+    //         setIsLoading(false);
+    //     },(err)=>{
+    //         setIsLoading(false);
+    //     })
+    // }
 
     const DefaultCharts = () => {
         if(users.length === 1 && users[0].hasOwnProperty('prs')){
-            console.log(users[0].prs);
+            console.log(users[0])
             return <>
             <DataCircles 
                 current={users[0].result}
@@ -282,58 +449,53 @@ const User = (props) => {
         </div>
         <div className="home-body px-2 py-3 bg-alice-blue">
             <div className="col-md-12">
-                        <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
-                            <div className="info">
-                                <HtmlTooltip
-                                    placement="top-end"
-                                    title={<p>Count of all PRs till today</p>}
-                                    arrow>
-                                    <img src={info} alt={"info"}/>
-                                </HtmlTooltip>
-                            </div>
-                            <div className="card-body" style={{padding:'35px'}}>
-                                <div className="row">
-                                    <CircleIndicator
-                                        text="PR"
-                                        background="grey"
-                                        size="100px"
-                                        end={count.total}
-                                    />
-                                    <CircleIndicator
-                                        text="open"
-                                        background="#13ce95"
-                                        size="100px"
-                                        end={count.open}
-                                    />               
-                                    <CircleIndicator
-                                        text="closed"
-                                        background="#EF7070"
-                                        size="100px"
-                                        end={count.closed}
-                                    />
-                                    <CircleIndicator
-                                        text="merged"
-                                        background="#6f42c1"
-                                        size="100px"
-                                        end={count.merged}
-                                    />                               
-                                </div>
-                            </div>
+                <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
+                    <div className="info">
+                        <HtmlTooltip
+                            placement="top-end"
+                            title={<p>Count of all PRs till today</p>}
+                            arrow>
+                            <img src={info} alt={"info"}/>
+                        </HtmlTooltip>
+                    </div>
+                    <div className="card-body" style={{padding:'35px'}}>
+                        <div className="row">
+                            <CircleIndicator
+                                text="PR"
+                                background="grey"
+                                size="100px"
+                                end={count.total}
+                            />
+                            <CircleIndicator
+                                text="open"
+                                background="#13ce95"
+                                size="100px"
+                                end={count.open}
+                            />               
+                            <CircleIndicator
+                                text="closed"
+                                background="#EF7070"
+                                size="100px"
+                                end={count.closed}
+                            />
+                            <CircleIndicator
+                                text="merged"
+                                background="#6f42c1"
+                                size="100px"
+                                end={count.merged}
+                            />                               
                         </div>
                     </div>
+                </div>
+            </div>
             <div className="container">
                 <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white flex-container row" style={{padding:'15px',justifyContent:'space-evenly'}}>
                     {values.map((value,i)=>{
-                        return <div className="multi-date-picker" key={i}>
-                                <DatePicker value={value} onChange={(val)=>onDateChanged(val,i)} type="button" range showOtherDays hideOnScroll>
-                                    {i > 0 && <select value={users[i].id} onChange={(e)=>onUserSelected(e,i)}>
-                                            {allUsers.map((usr)=>{
-                                                return <option key={usr.id} value={usr.id}>{usr.login}</option>
-                                            })}
-                                        </select>}
-                                    {i > 0 && <button className="btn btn-sm btn-outline-danger" onClick={()=>removeComparison(i)}>Delete</button>}
-                                </DatePicker>
-                        </div>
+                        if(i < users.length){
+                            return <div className='timeline-picker' key={i}>
+                                    <UserTimeline onValueChange={onTimelineChanged} selected={selectedTimeline[i]} uname={{id:users[i].id,login:users[i].login}} users={allUsers} index={i} val={value} removeComparison={removeComparison} onUserSelected={onUserSelected}/>
+                                </div>
+                        }
                     })}
                     <div className="info" style={{position:"absolute",top:"0px",right:"10px"}}>
                         <HtmlTooltip

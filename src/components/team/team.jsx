@@ -32,7 +32,7 @@ const Team = (props) => {
     const [prs,setPrs] = useState([]);
     const [isLoading,setIsLoading] = useState(true);
     const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
-    const [selectedTimeline,setSelectedTimeline] = useState({key:'last',value:{days:7}})
+    const [selectedTimeline,setSelectedTimeline] = useState([{key:'last',value:{days:7}}])
     const [tooltip,setTooltip] = useState({current:'last 7 days',previous:'Previous 7 days'});
 
     useEffect(()=>{
@@ -64,41 +64,66 @@ const Team = (props) => {
         let range1 = getRangeFromDateObject(rng);
         let prevRange1 = getPreviousRange(range1);
 
+        if(tm && tm.hasOwnProperty('data')){
+            return tm;
+        }
         const teamResult = tm.values.filter(val => val.range.from === range1.from && val.range.to === range1.to)[0];
-        const result = teamResult.result;
-        const data = teamResult.data;
-        const prevData = tm.values.filter(val => val.range.from === prevRange1.from && val.range.to === prevRange1.to)[0].result;
-        return {
-            _id:tm._id,
-            name:tm.name,
-            count:tm.count,
-            users:tm.users,
-            result,
-            data,
-            prevData
+        if(teamResult){
+            const result = teamResult.result;
+            const data = teamResult.data;
+            const prevData = tm.values.filter(val => val.range.from === prevRange1.from && val.range.to === prevRange1.to)[0].result;
+            return {
+                _id:tm._id,
+                name:tm.name,
+                count:tm.count,
+                users:tm.users,
+                range:range1,
+                result,
+                data,
+                prevData
+            }
+        }else{
+            console.log('invalid result');
+            console.log(range1,prevRange1,tm);
+        }
+    }
+
+    const getTeamFromApi = (t_id,index,val) =>{
+        let from = val[0];
+        let to = val[1];
+        let range = {
+            from: convertDate(dateFormat(from)),
+            to: getNextDate(dateFormat(to))
+        }
+        let tmrng = teams[index];
+        let teamRange = range;
+        if(tmrng !== undefined){
+            teamRange = tmrng.range;
+        }
+        if(tmrng._id !== t_id || teamRange.from !== convertDate(dateFormat(values[index][0])) || teamRange.to !== getNextDate(dateFormat(values[index][1]))){
+            setIsLoading(true);
+            http.getTeamDataByRange(range,t_id).then(({data})=>{
+                let tms = teams;
+                tms[index] = data.team;
+                setTeams([...tms])
+                setIsLoading(false);
+            },err => setIsLoading(false))
         }
     }
 
     const onTimelineChanged = (val,t_id,index,type,obj) => {
         setTooltip(getTooltipData(type,obj));
-        setSelectedTimeline({key:type,value:obj})
+        let tl = selectedTimeline;
+        tl[index] = {key:type,value:obj};
+        setSelectedTimeline([...tl])
 
         let ranges = values;
 
         let from = new DateObject({date:new Date(val.range.from)});
         let to = new DateObject({date:new Date(val.range.to)}).subtract(1,'days');
-        ranges[index] = {
-            from, to
-        };
-
-        console.log(from,to);
+        ranges[index] = [from,to];
         if(type === 'custom7' || type === 'custom15'){
-            setIsLoading(true);
-            http.getTeamDataByrange({from,to},t_id).then((tm)=>{
-                let tms = teams;
-                tms[index] = tm;
-                setTeams([...tms])
-            })
+            getTeamFromApi(t_id,index,[from,to]);
         }else{
             const tm1 = allTeams.filter((tm)=>tm._id === t_id)[0];
             const tm = getTeam(tm1,[from,to]);
@@ -145,6 +170,7 @@ const Team = (props) => {
     const addComparisions = () => {
         setValues([...values,values[0]]);
         setTeams([...teams,teams[0]]);
+        setSelectedTimeline([...selectedTimeline,selectedTimeline[0]])
     }
 
     const removeComparison = (i) => {
@@ -154,10 +180,12 @@ const Team = (props) => {
         let teamsState = teams;
         teamsState.splice(i,1);
         setTeams([...teamsState]);
+        let stl = selectedTimeline;
+        stl.splice(i,1);
+        setSelectedTimeline([...stl]);
     }
 
-    const onTeamSelected = (e,i) => {
-        let id = e.target.value;
+    const onTeamSelected = (id,i,selectedTime) => {
         let arr = teams;
         let team = teams[0];
         allTeams.map((t)=>{
@@ -165,18 +193,43 @@ const Team = (props) => {
                 team = t;
             }
         });
-        arr[i]=team;
-        setTeams([...arr]);
-        setIsLoading(true);
-        getTeamDataByIndex(i).then((team) => {
-            let teamArr = teams;
-            teamArr[i] = team;
-            setTeams([...teamArr]);
-            setIsLoading(false);
-        },(err)=>{
-            setIsLoading(false);
-        })
+        if(selectedTime === 'custom7' || selectedTime === 'custom15'){
+            getTeamFromApi(id,i,values[i]);
+        }else{
+            arr[i]=getTeam(team,values[i]);
+            setTeams([...arr]);
+        }        
+        // setIsLoading(true);
+        // getTeamDataByIndex(i).then((team) => {
+        //     let teamArr = teams;
+        //     teamArr[i] = team;
+        //     setTeams([...teamArr]);
+        //     setIsLoading(false);
+        // },(err)=>{
+        //     setIsLoading(false);
+        // })
     }
+    // const onTeamSelected = (e,i) => {
+    //     let id = e.target.value;
+    //     let arr = teams;
+    //     let team = teams[0];
+    //     allTeams.map((t)=>{
+    //         if(t._id === id){
+    //             team = t;
+    //         }
+    //     });
+    //     arr[i]=team;
+    //     setTeams([...arr]);
+    //     setIsLoading(true);
+    //     getTeamDataByIndex(i).then((team) => {
+    //         let teamArr = teams;
+    //         teamArr[i] = team;
+    //         setTeams([...teamArr]);
+    //         setIsLoading(false);
+    //     },(err)=>{
+    //         setIsLoading(false);
+    //     })
+    // }
 
     const onEditTeam = () => {
         props.history.push(EDIT_TEAM_ROUTE);
@@ -340,19 +393,11 @@ const Team = (props) => {
             <div className="container">
                 <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white flex-container row" style={{padding:'15px',justifyContent:'space-evenly'}}>
                     {values.map((value,i)=>{
-                        return <div className='timeline-picker' key={i}>
-                                <TeamTimeline onValueChange={onTimelineChanged} selected={selectedTimeline} tname={{_id:teams[i]._id,name:teams[i].name}} teams={teams} index={i}/>
-                            </div>
-                        // return <div className="multi-date-picker" key={i}>
-                        //         <DatePicker value={value} onChange={(val)=>onDateChanged(val,i)} type="button" range showOtherDays hideOnScroll>
-                        //             {i > 0 && <select value={teams[i]._id} onChange={(e)=>onTeamSelected(e,i)}>
-                        //                     {allTeams.map((team)=>{
-                        //                         return <option key={team._id} value={team._id}>{team.name}</option>
-                        //                     })}
-                        //                 </select>}
-                        //             {i > 0 && <button className="btn btn-sm btn-outline-danger" onClick={()=>removeComparison(i)}>Delete</button>}
-                        //         </DatePicker>
-                        // </div>
+                        if(i<teams.length){
+                            return <div className='timeline-picker' key={i}>
+                                    <TeamTimeline onValueChange={onTimelineChanged} selected={selectedTimeline} tname={{_id:teams[i]._id,name:teams[i].name}} teams={allTeams} index={i} val={value} removeComparison={removeComparison} onTeamSelected={onTeamSelected}/>
+                                </div>
+                        }
                     })}
                 </div>
             </div>

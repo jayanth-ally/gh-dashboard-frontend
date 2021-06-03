@@ -113,6 +113,7 @@ const getPreviousRange = (range) => {
     let from = new Date(range.from);
     let to = new Date(range.to);
 
+    let startDate = from.getDate();
     let month = from.getMonth()+1;
     let year = from.getFullYear();
     const diff = Math.floor(Math.abs(to - from) / (1000 * 60 * 60 * 24));
@@ -138,7 +139,7 @@ const getPreviousRange = (range) => {
         let prevFrom = convertDate('01-'+MONTHS[prevMonth - 3]+'-'+prevYear);
         let prevTo = convertDate(from);
         return {from:prevFrom,to:prevTo}
-    }else if(diff > 20){
+    }else if(diff > 20 && startDate === 1){
         let prevMonth = month - 1;
         let prevYear = year;
         

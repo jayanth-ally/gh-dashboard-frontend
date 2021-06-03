@@ -308,7 +308,7 @@ const getStackedLinesForMultiplePrs = (result,range,key='commits',innerKey='tota
     let series = [];
     let resultSet = [];
     if(key === "count" && innerKey === "total"){
-        console.log(result);
+        // console.log(result);
     }
     range.map((value,i)=>{
         let rng = dateFormat(value[0])+" ~ "+dateFormat(value[1]); 
@@ -326,7 +326,7 @@ const getStackedLinesForMultiplePrs = (result,range,key='commits',innerKey='tota
     })
     let day = 1;
     result.map((item,index)=>{
-        const res = item.values.filter((val)=>val.range.from === range[index].from && val.range.to === range[index].to)[0].data;
+        const res = item.data;
         if(index===0){
             res.resultSet.map(({date,by,result})=>{
                 days.push(by+' '+day);

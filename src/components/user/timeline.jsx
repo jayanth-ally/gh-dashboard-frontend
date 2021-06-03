@@ -8,7 +8,7 @@ import { MONTHS, YEAR_SPLIT } from "../../config/constants";
 
 import {deleteRed} from '../../assets/svg/index';
 
-const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeComparison,onTeamSelected}) => {
+const UserTimeline = ({onValueChange,selected,uname,users,index,val,removeComparison,onUserSelected}) => {
 
 
     let keys = ["quaters","months","last"];
@@ -30,7 +30,7 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
         to:convertDate(dateFormat(new DateObject().subtract(6,'days')))
     })
 
-    const [teamId,setTeamId] = useState(tname._id);
+    const [teamId,setTeamId] = useState(uname.id);
     const [openCalender,setOpenCalender] = useState(false);
     const [value7,setValue7] = useState([]);
     const [value15,setValue15] = useState([]);
@@ -411,9 +411,9 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
     }
 
     const onTeamChanged = (e) => {
-        let team = teams.filter((t)=>t._id === e.target.value);
-        setTeamId(team._id);
-        onTeamSelected(e.target.value,index,selectedTimeline)
+        let user = users.filter((t)=>t.id === e.target.value);
+        setTeamId(user.id);
+        onUserSelected(e.target.value,index,selectedTimeline)
     }
 
     return <>
@@ -424,10 +424,10 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
         <div className='team-popup'>
             {index > 0 && <div className="popup-del-btn" onClick={()=>removeComparison(index)}><img src={deleteRed} width="15px" height="15px"/></div>}
             <div className='popup-close-btn red-hover' onClick={()=>setIsExpanded(false)}>X</div>
-            {index === 0 && <div className='team-name'>{tname.name}</div>}
+            {index === 0 && <div className='team-name'>{uname.login}</div>}
             {index > 0 && <select value={teamId} onChange={onTeamChanged}>
-                    {teams.map((team)=>{
-                        return <option key={team._id} value={team._id}>{team.name}</option>
+                    {users.map((user)=>{
+                        return <option key={user.id} value={user.id}>{user.login}</option>
                     })}
                 </select>}
             <div className="row">
@@ -471,4 +471,4 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
     </>
 }
 
-export default TeamTimeline;
+export default UserTimeline;
