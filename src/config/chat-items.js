@@ -170,6 +170,29 @@ const topTeamsArr = [
     }
 ]
 
+const topUsersArr = [
+    {
+        name:'Top 3 Users (Total PRs)',
+        key:'count',
+        option:(teams,key)=>charts.getHorizontalStackedBarsForTeamsPRCount(teams),
+    },
+    {
+        name:'Top 3 Users (Commits)',
+        key:'commits',
+        option:(teams,key)=>charts.getHorizontalStackedBarsForTeams(teams,key),
+    },
+    {
+        name:'Top 3 Users (Review Comments)',
+        key:'reviews',
+        option:(teams,key)=>charts.getHorizontalStackedBarsForTeams(teams,key),
+    },
+    {
+        name:'Top 3 Users (PR Cycle)',
+        key:'prCycle',
+        option:(teams,key)=>charts.getHorizontalStackedBarsForTeamsPRCycle(teams,key),
+    }
+]
+
 const prsCurrent = {
     option:(result)=>charts.getBarForNoOfPrs(result),
 }
@@ -186,6 +209,7 @@ export {
     defaultArr,
     multiArr,
     topTeamsArr,
+    topUsersArr,
     prsLastDay,
     prsCurrent,
     prsPrevious,
