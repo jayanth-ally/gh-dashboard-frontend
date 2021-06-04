@@ -449,7 +449,11 @@ const getHorizontalStackedBarsForTeamsPRCount = (teams=[]) => {
     })
     let teamArr = [];
     teams.map((team)=>{
-        teamArr.push({id:team._id,value:team.name});
+        let val = team.name;
+        if(val.length > 10){
+            val = val.split('-')[0];
+        }
+        teamArr.push({id:team._id,value:val});
         let result = team.result;
 
         data.map((name,i)=>{
@@ -529,6 +533,10 @@ const getHorizontalStackedBarsForTeamsPRCycle = (teams=[]) => {
     })
     let teamArr = [];
     teams.map((team)=>{
+        let val = team.name;
+        if(val.length > 10){
+            val = val.split('-')[0];
+        }
         teamArr.push({id:team._id,value:team.name});
         let result = team.result;
 

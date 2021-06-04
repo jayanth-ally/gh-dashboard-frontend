@@ -35,7 +35,7 @@ const TopTeams = ({teamsData,tooltipData,range}) => {
                         key={i}
                         item={item}
                         resultKey={item.key}
-                        teams={teamArr}
+                        arr={teamArr}
                     />
                 })}
             </div>

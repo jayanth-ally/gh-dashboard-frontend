@@ -8,6 +8,7 @@ import HtmlTooltip from '../common/htmlTooltip/index';
 import ChartCard from '../common/chartCard/index';
 import Loading from '../loading/loading';
 import TeamTimeline from "./timeline";
+import TopUsers from './topUsers';
 
 import * as http from '../../utils/http';
 import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject,getPreviousRange,getTooltipData} from '../../utils/time-conversion';
@@ -34,6 +35,7 @@ const Team = (props) => {
     const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
     const [selectedTimeline,setSelectedTimeline] = useState([{key:'last',value:{days:7}}])
     const [tooltip,setTooltip] = useState({current:'last 7 days',previous:'Previous 7 days'});
+    const [teamUsers,setTeamUsers] = useState([]);
 
     useEffect(()=>{
         props.setNavKey(props.navKey);
@@ -42,6 +44,17 @@ const Team = (props) => {
     useEffect(()=>{
         if(selectedTeam.hasOwnProperty('values')){
             setIsLoading(false);
+        }
+        if(selectedTeam.hasOwnProperty('users') && teamUsers.length === 0 && (selectedTimeline[0].key !== 'custom7' && selectedTimeline[0].key !== 'custom15')){
+            let team = selectedTeam;
+            let userArr = [];
+            team.users.map((u,i)=>{
+                http.getUserById(u.id).then(({data})=>{
+                    let userArr = teamUsers;
+                    userArr.push(data.doc);
+                    setTeamUsers([...userArr]);
+                })
+            });
         }
     },[selectedTeam])
 
@@ -59,6 +72,14 @@ const Team = (props) => {
             }
         }
     },[allTeams])
+
+    useEffect(()=>{
+        if(teamUsers.length < selectedTeam.users.length){
+            setIsLoading(true);
+        }else{
+            setIsLoading(false);
+        }
+    },[teamUsers])
 
     const getTeam = (tm,rng) => {
         let range1 = getRangeFromDateObject(rng);
@@ -199,37 +220,7 @@ const Team = (props) => {
             arr[i]=getTeam(team,values[i]);
             setTeams([...arr]);
         }        
-        // setIsLoading(true);
-        // getTeamDataByIndex(i).then((team) => {
-        //     let teamArr = teams;
-        //     teamArr[i] = team;
-        //     setTeams([...teamArr]);
-        //     setIsLoading(false);
-        // },(err)=>{
-        //     setIsLoading(false);
-        // })
     }
-    // const onTeamSelected = (e,i) => {
-    //     let id = e.target.value;
-    //     let arr = teams;
-    //     let team = teams[0];
-    //     allTeams.map((t)=>{
-    //         if(t._id === id){
-    //             team = t;
-    //         }
-    //     });
-    //     arr[i]=team;
-    //     setTeams([...arr]);
-    //     setIsLoading(true);
-    //     getTeamDataByIndex(i).then((team) => {
-    //         let teamArr = teams;
-    //         teamArr[i] = team;
-    //         setTeams([...teamArr]);
-    //         setIsLoading(false);
-    //     },(err)=>{
-    //         setIsLoading(false);
-    //     })
-    // }
 
     const onEditTeam = () => {
         props.history.push(EDIT_TEAM_ROUTE);
@@ -237,6 +228,7 @@ const Team = (props) => {
 
     const DefaultCharts = () => {
         if(teams.length === 1 && selectedTeam.hasOwnProperty('values')){
+            let rng = getRangeFromDateObject(values[0]);
             const onUserClicked = (id) => {
                 const userIndex = users.findIndex((user) => user.id === id);
                 dispatch(selectUser(users[userIndex]));
@@ -273,28 +265,18 @@ const Team = (props) => {
                             </div>
                         </div>
                     </div>
-                    <div className="col-md-12">
+                    {(selectedTimeline[0].key !== 'custom7' && selectedTimeline[0].key !== 'custom15') && <div className="col-md-12">
                         <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer">
                             <div className="card-body">
-                                <Collapsible trigger="Users - Top 3">
+                                <Collapsible trigger="Users (Top 3)">
                                     <hr/>
                                     <div className="all-user-cards bg-alice-blue">
-                                        {selectedTeam.users.map((user,i)=>{
-                                            return <UserCards 
-                                                key={i} 
-                                                size="200px"
-                                                imgSize="40px"
-                                                id={user.id}
-                                                avatar={user.avatarUrl}
-                                                login={user.login}
-                                                selectUser={()=>onUserClicked(user.id)}
-                                            />
-                                        })}
+                                            <TopUsers usersData={teamUsers} tooltipData={tooltip} range={rng} />
                                     </div>
                                 </Collapsible>
                             </div>
                         </div>
-                    </div>
+                    </div>}
                 </div>
             </div>
             <div className="container">
