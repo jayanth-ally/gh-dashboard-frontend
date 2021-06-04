@@ -16,6 +16,7 @@ import { Link } from "react-router-dom";
 import { HOME_ROUTE, PR_ROUTE } from "../../config/routes";
 
 import {info} from '../../assets/svg/index';
+import './pr.css';
 
 const PR = (props) => {
     const dispatch = useDispatch();
