@@ -319,7 +319,6 @@ const User = (props) => {
 
     const DefaultCharts = () => {
         if(users.length === 1 && users[0].hasOwnProperty('prs')){
-            console.log(users[0])
             return <>
             <DataCircles 
                 current={users[0].result}

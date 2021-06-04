@@ -209,7 +209,7 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
             }
         ]
         let tl = {quaters,months:monthArr,last};
-        if(selected.key !== 'custom7' && selected.key !== 'custom15'){
+        if(selected.key === 'quaters' || selected.key === 'months' || selected.key === 'last'){
             tl[selected.key].map((t)=>{
                 t.selected = false;
                 if(selected.key === "quaters"){

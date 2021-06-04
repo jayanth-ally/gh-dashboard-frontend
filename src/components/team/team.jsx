@@ -395,7 +395,7 @@ const Team = (props) => {
                     {values.map((value,i)=>{
                         if(i<teams.length){
                             return <div className='timeline-picker' key={i}>
-                                    <TeamTimeline onValueChange={onTimelineChanged} selected={selectedTimeline} tname={{_id:teams[i]._id,name:teams[i].name}} teams={allTeams} index={i} val={value} removeComparison={removeComparison} onTeamSelected={onTeamSelected}/>
+                                    <TeamTimeline onValueChange={onTimelineChanged} selected={selectedTimeline[i]} tname={{_id:teams[i]._id,name:teams[i].name}} teams={allTeams} index={i} val={value} removeComparison={removeComparison} onTeamSelected={onTeamSelected}/>
                                 </div>
                         }
                     })}
