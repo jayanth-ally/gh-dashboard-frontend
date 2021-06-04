@@ -355,6 +355,32 @@ const calculatePrTimeTaken = (prs,options={}) => {
     return [avg,avg/total,{value:max,pr:maxPr}];
 }
 
+const getTopThreeUsers = (users,metric="count") => {
+    let arr = [...users];
+    let innerKey = "total";
+    if(metric === "prCycle"){
+        innerKey = "avg";
+    }
+    arr = arr.sort((a,b)=>(a.result[metric][innerKey] < b.result[metric][innerKey])?1:(a.result[metric][innerKey] > b.result[metric][innerKey])?-1:0);
+    let topArr = [];
+    if(metric === "prCycle"){
+        arr = arr.filter(a => a.result[metric][innerKey] >= MIN_PR_CYCLE_TIME);
+    }
+    let len = arr.length;
+    arr.map((user,i)=>{
+        if(metric === "prCycle"){
+            if(i>len - 4){
+                topArr.push(user);
+            }
+        }else{
+            if(i<3){
+                topArr.push(user);
+            }
+        }
+    })
+    return topArr;
+}
+
 const getTopFiveTeams = (teams,metric="count") => {
     let arr = [...teams];
     let innerKey = "total";
@@ -442,6 +468,7 @@ function ParseFloat(str,val=2) {
 export {
     calculatePrsByDate,
     calculateMetrics,
+    getTopThreeUsers,
     getTopFiveTeams,
     calculatePrCycle,
     calculatePrTimeTaken,
