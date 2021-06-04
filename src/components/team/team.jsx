@@ -42,7 +42,7 @@ const Team = (props) => {
     },[])
 
     useEffect(()=>{
-        if(selectedTeam.hasOwnProperty('values')){
+        if(selectedTeam.hasOwnProperty('users')){
             setIsLoading(false);
         }
         if(selectedTeam.hasOwnProperty('users') && teamUsers.length === 0 && (selectedTimeline[0].key !== 'custom7' && selectedTimeline[0].key !== 'custom15')){
@@ -64,6 +64,7 @@ const Team = (props) => {
             if(index === -1){
                 props.history.goBack();
             }else{
+                setIsLoading(true);
                 const team = allTeams[index];
                 dispatch(selectTeam(team));
                 setTitle(team.name);
@@ -74,10 +75,12 @@ const Team = (props) => {
     },[allTeams])
 
     useEffect(()=>{
-        if(teamUsers.length < selectedTeam.users.length){
-            setIsLoading(true);
-        }else{
-            setIsLoading(false);
+        if(selectedTeam.hasOwnProperty('users')){
+            if(teamUsers.length < selectedTeam.users.length){
+                setIsLoading(true);
+            }else{
+                setIsLoading(false);
+            }
         }
     },[teamUsers])
 
