@@ -326,7 +326,10 @@ const getStackedLinesForMultiplePrs = (result,range,key='commits',innerKey='tota
     })
     let day = 1;
     result.map((item,index)=>{
-        const res = item.data;
+        let res = item;
+        if(type !== ""){
+            res = item.data;
+        }
         if(index===0){
             res.resultSet.map(({date,by,result})=>{
                 days.push(by+' '+day);
