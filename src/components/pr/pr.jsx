@@ -5,9 +5,10 @@ import HtmlTooltip from '../common/htmlTooltip/index';
 
 import ChartCard from '../common/chartCard/index';
 import Loading from '../loading/loading';
+import PRTimeline from './timeline';
 
 import * as http from '../../utils/http';
-import {dateFormat, getNextDate} from '../../utils/time-conversion';
+import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject,getPreviousRange,getTooltipData} from '../../utils/time-conversion';
 import {calculatePrsByDate} from '../../utils/pr-calculations';
 import {defaultArr,multiArr} from '../../config/chat-items';
 import * as charts from '../../utils/chart-conversion';
@@ -15,27 +16,134 @@ import { Link } from "react-router-dom";
 import { HOME_ROUTE, PR_ROUTE } from "../../config/routes";
 
 import {info} from '../../assets/svg/index';
+import './pr.css';
 
 const PR = (props) => {
     const dispatch = useDispatch();
     const repo = useSelector(state => state.repos.selected || {});
+    const org = useSelector(state => state.org.data.org || []);
     const [prs,setPrs] = useState([]);
     const [isLoading,setIsLoading] = useState(false);
     const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
+    const [selectedTimeline,setSelectedTimeline] = useState([{key:'last',value:{days:7}}])
+    const [tooltip,setTooltip] = useState({current:'last 7 days',previous:'Previous 7 days'});
     
     useEffect(()=>{
         props.setNavKey(props.navKey);
     },[])
 
-    useEffect(()=>{
-        console.log(prs);
-    },[prs])
 
     useEffect(()=>{
-        if(repo.hasOwnProperty('prs')){
-            setPrs([repo.prs]);
+        if(org.length > 0){
+            getPrs(org[0].data[0],0,values[0]);
         }
-    },[repo])
+    },[org])
+
+    const getPrs = (pr,i,rng) => {
+        let range1 = getRangeFromDateObject(rng);
+        let prevRange1 = getPreviousRange(range1);
+        if(!pr.hasOwnProperty('count')){
+            setIsLoading(true);
+            if(selectedTimeline === 'custom7' || selectedTimeline === 'custom15'){
+                http.getPrsData(
+                    {
+                        id:repo.id,
+                        name:repo.name,
+                        owner:repo.owner
+                    },range1).then(({data})=>{
+                        if(data.prs.hasOwnProperty('result')){
+                            let prArr = prs;
+                            let d = {...data.prs.result,range:range1};
+                            if(prs.length > 0){
+                                prArr[i] = d;
+                                setPrs([...prArr]);
+                            }else{
+                                setPrs([d])
+                            }
+                        }
+                        setIsLoading(false);
+                    },(err)=>{
+                        setIsLoading(false);
+                    })
+            }else{
+                // http.getUserById(usr.id).then(({data})=>{
+                //     getUser(data.doc,i,rng);
+                //     setIsLoading(false);
+                // },err => setIsLoading(false))
+            }
+            return {};
+        }else{
+            const prResult = org.filter((val) => val.range.from === range1.from && val.range.to === range1.to)[0];
+            if(prResult){
+                let prArr = prs;
+                let d = prResult.data.filter((val) => val.repo.owner === repo.owner && val.repo.name === repo.name)[0];
+                d = {...d,range:range1}
+                if(prs.length > 0){
+                    prArr[i] = d;
+                    setPrs([...prArr])
+                }else{
+                    setPrs([d])
+                }
+            }else{
+                console.log('invalid result');
+                console.log(range1,prevRange1,pr);
+            }
+        }
+    }
+
+    const getPrsFromApi = (index,val) => {
+        let from = val[0];
+        let to = val[1];
+        let range = {
+            from: convertDate(dateFormat(from)),
+            to: getNextDate(dateFormat(to))
+        }
+        let v = prs[index].range;
+        if(range.from !== v.from || range.to !== v.to){
+            setIsLoading(true);
+            http.getPrsData(
+                {
+                    id:repo.id,
+                    name:repo.name,
+                    owner:repo.owner
+                },range).then(({data})=>{
+                    if(data.prs.hasOwnProperty('result')){
+                        let prArr = prs;
+                        let d = data.prs.result;
+                        d = {...d,range}
+                        if(prs.length > 0){
+                            prArr[index] = d;
+                            setPrs([...prArr]);
+                        }else{
+                            setPrs([d])
+                        }
+                    }
+                    setIsLoading(false);
+                },(err)=>{
+                    setIsLoading(false);
+                })
+        }
+    }
+
+    const onTimelineChanged = (val,index,type,obj) => {
+        setTooltip(getTooltipData(type,obj));
+        let tl = selectedTimeline;
+        tl[index] = {key:type,value:obj};
+        setSelectedTimeline([...tl])
+
+        let ranges = values;
+
+        let from = new DateObject({date:new Date(val.range.from)});
+        let to = new DateObject({date:new Date(val.range.to)}).subtract(1,'days');
+        ranges[index] = [from,to];
+        if(type === 'custom7' || type === 'custom15'){
+            getPrsFromApi(index,[from,to]);
+        }else{
+            const tm1 = prs[index];
+            getPrs(tm1,index,[from,to]);
+        } 
+        setValues([...ranges])
+    }
 
     const onDateChanged = (val,i) => {
         let valArr = values;
@@ -69,6 +177,7 @@ const PR = (props) => {
     const addComparisions = () => {
         setValues([...values,values[0]]);
         setPrs([...prs,prs[0]]);
+        setSelectedTimeline([...selectedTimeline,selectedTimeline[0]])
     }
 
     const removeComparison = (i) => {
@@ -78,16 +187,19 @@ const PR = (props) => {
         let prArr = prs;
         prArr.splice(i,1);
         setPrs([...prArr]);
+        let stl = selectedTimeline;
+        stl.splice(i,1);
+        setSelectedTimeline([...stl]);
     }
 
     const DefaultCharts = () => {
-        return prs.length === 1 && prs[0].hasOwnProperty('result')?(
+        return prs.length === 1 && prs[0].hasOwnProperty('count')?(
             <div className="container">
                 <div className="flex-container row">
                     {defaultArr.map((item,index)=>{
                         return <ChartCard key={index}
                             item={item}
-                            result={prs[0].result}
+                            result={prs[0]}
                             range={values}
                         />
                     })}
@@ -132,11 +244,11 @@ const PR = (props) => {
             <div className="container">
                 <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white flex-container row" style={{padding:'15px',justifyContent:'space-evenly'}}>
                     {values.map((value,i)=>{
-                        return <div className="multi-date-picker" key={i}>
-                                <DatePicker value={value} onChange={(val)=>onDateChanged(val,i)} type="button" range showOtherDays hideOnScroll>
-                                    {i > 0 && <button className="btn btn-sm btn-outline-danger" onClick={()=>removeComparison(i)}>Delete</button>}
-                                </DatePicker>
-                        </div>
+                        if(i < prs.length){
+                            return <div className='timeline-picker' key={i}>
+                                    <PRTimeline onValueChange={onTimelineChanged} selected={selectedTimeline[i]} index={i} val={value} removeComparison={removeComparison}/>
+                                </div>
+                        }
                     })}
                     <div className="info" style={{position:"absolute",top:"0px",right:"10px"}}>
                         <HtmlTooltip

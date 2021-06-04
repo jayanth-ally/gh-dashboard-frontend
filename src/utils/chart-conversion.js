@@ -326,7 +326,10 @@ const getStackedLinesForMultiplePrs = (result,range,key='commits',innerKey='tota
     })
     let day = 1;
     result.map((item,index)=>{
-        const res = item.data;
+        let res = item;
+        if(type !== ""){
+            res = item.data;
+        }
         if(index===0){
             res.resultSet.map(({date,by,result})=>{
                 days.push(by+' '+day);
@@ -381,7 +384,7 @@ const formatMultiple = (params,dates) => {
          span += `
             <div style="margin:0px 0 0;line-height:2">
                 <span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span>
-                <span style="font-size:14px; color:#666; font-weight:400; margin-left:2px">${dates[i][index]}</span>
+                <span style="font-size:14px; color:#666; font-weight:400; margin-left:2px">${dates[i][index].from+'~'+dates[i][index].to}</span>
                 <span style="float:right; font-size:14px; color:#666; font-weight:900; margin-left:10px">${value}</span>
             </div>
             `;
@@ -407,7 +410,7 @@ const formatMultipleTimeTaken = (params,dates) => {
          span += `
             <div style="margin:0px 0 0;line-height:2">
                 <span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span>
-                <span style="font-size:14px; color:#666; font-weight:400; margin-left:2px">${dates[i][index]}</span>
+                <span style="font-size:14px; color:#666; font-weight:400; margin-left:2px">${dates[i][index].from+'~'+dates[i][index].to}</span>
                 <span style="float:right; font-size:14px; color:#666; font-weight:900; margin-left:10px">${time}</span>
             </div>
             `;

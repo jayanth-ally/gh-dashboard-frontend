@@ -50,7 +50,7 @@ const TEAMS_DATA = DATA_URL + '/teams';
 const TEAM_DATA = DATA_URL + '/team';
 const TEAM_DATA_BY_RANGE = BASE_URL + '/data/team';
 // params:{repo,range}
-const PRS_DATA = DATA_URL + '/pulls';
+const PRS_DATA = BASE_URL + '/data/pulls';
 
 export {
     TESTING_API,

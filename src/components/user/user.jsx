@@ -44,9 +44,6 @@ const User = (props) => {
                 const usr = allUsers[index];
                 dispatch(selectUser(usr));
                 getUser(usr,0,values[0]);
-                // if(tm.hasOwnProperty('count')){
-                //     setUsers([tm])
-                // }
             }
         }else{
             props.history.replace(HOME_ROUTE);
@@ -295,31 +292,8 @@ const User = (props) => {
         setSelectedTimeline([...stl]);
     }
 
-    // const onUserSelected = (e,i) => {
-    //     let id = e.target.value;
-    //     let arr = users;
-    //     let usr = users[0];
-    //     allUsers.map((u)=>{
-    //         if(u.id === id){
-    //             usr = u;
-    //         }
-    //     });
-    //     arr[i]=usr;
-    //     console.log('updated user',arr);
-    //     setUsers([...arr]);
-    //     getUserDataByIndex(i).then(usr => {
-    //         let userArr = users;
-    //         userArr[i] = usr;
-    //         setUsers([...userArr]);
-    //         setIsLoading(false);
-    //     },(err)=>{
-    //         setIsLoading(false);
-    //     })
-    // }
-
     const DefaultCharts = () => {
         if(users.length === 1 && users[0].hasOwnProperty('prs')){
-            console.log(users[0])
             return <>
             <DataCircles 
                 current={users[0].result}

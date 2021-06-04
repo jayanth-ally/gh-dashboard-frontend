@@ -8,7 +8,7 @@ import { MONTHS, YEAR_SPLIT } from "../../config/constants";
 
 import {deleteRed} from '../../assets/svg/index';
 
-const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeComparison,onTeamSelected}) => {
+const PRTimeline = ({onValueChange,selected,index,val,removeComparison}) => {
 
 
     let keys = ["quaters","months","last"];
@@ -30,7 +30,6 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
         to:convertDate(dateFormat(new DateObject().subtract(6,'days')))
     })
 
-    const [teamId,setTeamId] = useState(tname._id);
     const [openCalender,setOpenCalender] = useState(false);
     const [value7,setValue7] = useState([]);
     const [value15,setValue15] = useState([]);
@@ -86,7 +85,7 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
                     }
                 })
             }
-            onValueChange({range,prevRange},teamId,index,selectedTimeline,obj);
+            onValueChange({range,prevRange},index,selectedTimeline,obj);
         }
     },[range])
 
@@ -209,7 +208,7 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
             }
         ]
         let tl = {quaters,months:monthArr,last};
-        if(selected.key === 'quaters' || selected.key === 'months' || selected.key === 'last'){
+        if(selected.key !== 'custom7' && selected.key !== 'custom15'){
             tl[selected.key].map((t)=>{
                 t.selected = false;
                 if(selected.key === "quaters"){
@@ -410,11 +409,6 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
         setValue15(val);
     }
 
-    const onTeamChanged = (e) => {
-        let team = teams.filter((t)=>t._id === e.target.value);
-        setTeamId(team._id);
-        onTeamSelected(e.target.value,index,selectedTimeline)
-    }
 
     return <>
     <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer" style={{padding:'2px 5px',border:'2px solid #13ce95'}} onClick={()=>setIsExpanded(true)}>
@@ -424,12 +418,7 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
         <div className='team-popup'>
             {index > 0 && <div className="popup-del-btn" onClick={()=>removeComparison(index)}><img src={deleteRed} width="15px" height="15px"/></div>}
             <div className='popup-close-btn red-hover' onClick={()=>setIsExpanded(false)}>X</div>
-            {index === 0 && <div className='team-name'>{tname.name}</div>}
-            {index > 0 && <select value={teamId} onChange={onTeamChanged}>
-                    {teams.map((team)=>{
-                        return <option key={team._id} value={team._id}>{team.name}</option>
-                    })}
-                </select>}
+            <div className='team-name'>{range.from+' ~ '+getPreviousDate(range.to)}</div>
             <div className="row">
                 <div className="btn-toolbar mb-2 mb-md-0 col-md-9" style={{display:'flex',flexDirection:'column'}}>
                     {keys.map((k)=>{
@@ -471,4 +460,4 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
     </>
 }
 
-export default TeamTimeline;
+export default PRTimeline;
