@@ -3,12 +3,24 @@ import {createAction} from '@reduxjs/toolkit';
 const loginUserAction = createAction("users/LOGIN_USER");
 const logoutUserAction = createAction("users/LOGOUT_USER");
 
+const fetchingUsersAction = createAction("users/FETCHING_USERS");
 const addUsersAction = createAction("users/ADD_USERS");
 const clearUsersAction = createAction("users/CLEAR_USERS");
 
 const selectUserAction = createAction("users/SELECT_USER");
 const updateUserAction = createAction("users/UPDATE_USER");
 const clearSelectedUserAction = createAction("users/CLEAR_SELECTED_USER")
+
+
+
+const fetchingUsers = (fetching) =>{
+    return {
+        type:fetchingUsersAction.type,
+        payload:{
+            fetching
+        }
+    }
+}
 
 const loginUser = (user) => {
     return {
@@ -70,6 +82,7 @@ const clearSelectedUser = () => {
 export {
     loginUserAction,
     logoutUserAction,
+    fetchingUsersAction,
     addUsersAction,
     clearUsersAction,
     selectUserAction,
@@ -77,6 +90,7 @@ export {
     clearSelectedUserAction,
     loginUser,
     logoutUser,
+    fetchingUsers,
     addUsers,
     clearUsers,
     selectUser,

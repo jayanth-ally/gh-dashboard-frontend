@@ -44,43 +44,16 @@ const EditTeam = (props) => {
             teamDetails = {...teamDetails,_id:details._id}
         }
         http.updateTeam(teamDetails).then(({data})=>{
-            getAllPrsForTeam(data.team).then((_team)=>{
-                if(isNew){
-                    dispatch(addTeam(_team));
-                }else{
-                    dispatch(updateTeam(_team));
-                }
-                props.history.replace(TEAM_ROUTE);
-                setIsLoading(false);
-            })
+            if(isNew){
+                dispatch(addTeam(data.team));
+            }else{
+                dispatch(updateTeam(data.team));
+            }
+            props.history.replace(TEAM_ROUTE);
+            setIsLoading(false);
         },(err)=>{
             setIsLoading(false);
         })
-    }
-
-    const getAllPrsForTeam = async (team) => {
-        let prs = [];
-        let data = [];
-        team.users.map((user)=>{
-            let i = users.findIndex(u => u.id === user.id);
-            users[i].prs.map(pr => {
-                let index = data.findIndex(d => d.repo.id === pr.repo.id);
-                let lastweek = new DateObject().subtract(6,"days");
-                if(pr.updatedAt >= convertDate(dateFormat(lastweek))){
-                    if(index === -1){
-                        data.push({repo:pr.repo,ids:[pr.id]});
-                    }else{
-                        data[index].ids.push(pr.id);
-                    }
-                }
-            })
-        });
-        
-        await Promise.all(data.map(async (d) => {
-            const {data} = await http.getPrsById(d.repo,d.ids);
-            prs = [...prs,...data.prs];
-        }));
-        return Object.assign({}, team, {prs});
     }
 
     const onNameChanged = (event) => {

@@ -21,7 +21,6 @@ import * as charts from '../../utils/chart-conversion';
 
 const PrDashboard = (props) => {
     const dispatch = useDispatch();
-    // const repos = useSelector(state => state.repos.all || []);
     const orgData = useSelector(state => state.org.data.org || []);
     const [isLoading,setIsLoading] = useState(false);
 
@@ -35,45 +34,10 @@ const PrDashboard = (props) => {
         props.setNavKey(props.navKey);
     },[])
 
-    // useEffect(()=>{
-    //     if(repos.length === 0){
-    //         setIsLoading(true);
-    //         http.getRepos().then(({data}) => {
-    //             dispatch(addRepos(data.repos));     
-    //             setIsLoading(false);
-    //         },(err)=>{
-    //             setIsLoading(false);
-    //         })
-    //     }
-    // },[dispatch])
-
     useEffect(()=>{
         let r = orgData.filter((val) => val.range.from === range.from && val.range.to === range.to)[0].data;
         setRepos(r);
     },[orgData])
-
-    // useEffect(()=>{
-    //     if(repos.length > 0 && !repos[0].prs.hasOwnProperty('result')){
-    //         setIsLoading(true);
-    //         repos.map((repo)=>{
-    //             const range = {
-    //                 from: convertDate(dateFormat(new DateObject().subtract(6,'days'))),
-    //                 to: convertDate(dateFormat(new DateObject().add(1,'days'))),
-    //             }
-    //             const r = {
-    //                 id:repo.id,
-    //                 owner:repo.owner,
-    //                 name:repo.name
-    //             };
-    //             http.getPrsData(r,range).then(({data})=>{
-    //                 dispatch(addPrs(r,data.prs));
-    //                 setIsLoading(false);
-    //             },(err)=>{
-    //                 setIsLoading(false);
-    //             }) 
-    //         })    
-    //     }
-    // },[repos]);
 
     const repoOnClick = (repo) => {
         dispatch(selectRepo(repo));

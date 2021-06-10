@@ -7,7 +7,7 @@ import {DateObject} from "react-multi-date-picker"
 import Loading from '../loading/loading';
 
 import * as http from '../../utils/http';
-import {addUsers} from '../../store/users/actions';
+import {addUsers,fetchingUsers} from '../../store/users/actions';
 import {addTeams,deleteTeam,selectTeam,updateTeam} from '../../store/teams/actions';
 import {getPrCount} from '../../utils/pr-calculations';
 
@@ -27,6 +27,7 @@ const TeamDashboard = (props) => {
     const dispatch = useDispatch();
     const teams = useSelector(state => state.teams.all);
     const users = useSelector(state => state.users.all);
+    const fetchingUsersData = useSelector(state => state.users.fetching);
     const [isLoading,setIsLoading] = useState(true);
     const [showMenu,setShowMenu] = useState([]);
     let range = {
@@ -50,8 +51,9 @@ const TeamDashboard = (props) => {
     },[teams])
 
     useEffect(()=>{
-        if(users.length === 0){
+        if(users.length === 0 && !fetchingUsersData){
             setIsLoading(true);
+            dispatch(fetchingUsers(true))
             http.getUsers().then(({data}) => {
                 dispatch(addUsers(data.users));           
                 setIsLoading(false);
@@ -88,7 +90,7 @@ const TeamDashboard = (props) => {
     const onDeleteTeam = (e,team) => {
         e.stopPropagation();
         dispatch(deleteTeam(team));
-        http.deleteTeam(team);
+        http.deleteTeam(team._id);
     }
 
     const goToTeamPage = (team) => {

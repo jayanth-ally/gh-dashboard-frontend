@@ -17,7 +17,7 @@ import CircleIndicator from "../common/circleIndicator";
 import { selectTeam } from "../../store/teams/actions";
 import { EDIT_TEAM_ROUTE, HOME_ROUTE, TEAMS_ROUTE } from "../../config/routes";
 import UserCards from "../user/userCards";
-import { selectUser } from "../../store/users/actions";
+import { selectUser,updateUser } from "../../store/users/actions";
 
 import {info} from '../../assets/svg/index';
 import DataCircles from "../common/dataCircle/dataCircles"; 
@@ -48,13 +48,23 @@ const Team = (props) => {
         if(selectedTeam.hasOwnProperty('users') && teamUsers.length === 0 && (selectedTimeline[0].key !== 'custom7' && selectedTimeline[0].key !== 'custom15')){
             let team = selectedTeam;
             let userArr = [];
-            team.users.map((u,i)=>{
-                http.getUserById(u.id).then(({data})=>{
-                    let userArr = teamUsers;
-                    userArr.push(data.doc);
-                    setTeamUsers([...userArr]);
-                })
+            let userIds = [];
+            team.users.forEach((u)=> {
+                const index = users.findIndex((usr) => usr.id === u.id);
+                if(!users[index].hasOwnProperty('count')){
+                    userIds.push(u.id)
+                }else{
+                    userArr.push(users[index]);
+                }
             });
+
+            http.getUserById(userIds).then(({data})=>{
+                data.users.forEach((usr)=>{
+                    userArr.push(usr);
+                    dispatch(updateUser(usr));
+                })
+                setTeamUsers([...userArr]);
+            })
         }
     },[selectedTeam])
 
