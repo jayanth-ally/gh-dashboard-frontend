@@ -20,7 +20,6 @@ import {MONTHS,YEAR_SPLIT} from '../../config/constants';
 const HomeDashboard = (props) => {
 
     const dispatch = useDispatch();
-    const repos = useSelector(state => state.repos.all);
     const users = useSelector(state => state.users.all);
     const fetchingUsersData = useSelector(state => state.users.fetching);
     const teams = useSelector(state => state.teams.all);
@@ -110,6 +109,16 @@ const HomeDashboard = (props) => {
             })
         }
 
+        if(teams.length === 0){
+            setLoadingData({
+                ...loadingData,
+                teams:true,
+            })
+            http.getTeamsData(range,prevRange).then(({data})=>{
+                dispatch(addTeams(data.teams));
+            })
+        }
+
         if(users.length === 0 && !fetchingUsersData){
             setLoadingData({
                 ...loadingData,
@@ -125,16 +134,6 @@ const HomeDashboard = (props) => {
                 })
             })
         }
-
-        if(teams.length === 0){
-            setLoadingData({
-                ...loadingData,
-                teams:true,
-            })
-            http.getTeamsData(range,prevRange).then(({data})=>{
-                dispatch(addTeams(data.teams));
-            })
-        }
     }
 
     return (
@@ -147,9 +146,7 @@ const HomeDashboard = (props) => {
                 <Timeline onValueChange={onTimelineChanged} selected={selectedTimeline}/>
             </div>
             
-                {orgData.hasOwnProperty('today')? <>
-                    <Organization orgData={orgData} tooltipData={tooltip} range={range} prevRange={prevRange}/>
-                </> : <Loading/> }   
+            {orgData.hasOwnProperty('today')? <Organization orgData={orgData} tooltipData={tooltip} range={range} prevRange={prevRange}/>: <Loading/> }   
             {teams.length > 0 ?   <TopTeams teamsData={teams} tooltipData={tooltip} range={range} /> : <Loading/>}
         </>
     );
