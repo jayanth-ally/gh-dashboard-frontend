@@ -80,8 +80,9 @@ const User = (props) => {
                     setIsLoading(false);
                 },err => setIsLoading(false))
             }else{
-                http.getUserById(usr.id).then(({data})=>{
-                    getUser(data.doc,i,rng);
+                http.getUserById([usr.id]).then(({data})=>{
+                    getUser(data.users[0],i,rng);
+                    dispatch(updateUser(data.users[0]));
                     setIsLoading(false);
                 },err => setIsLoading(false))
             }
@@ -210,8 +211,8 @@ const User = (props) => {
         if(!(user.hasOwnProperty('values'))){
             setIsLoading(true);
             const range = getRangeFromDateObject(values[0]);
-            http.getUserById(user.id).then(({data}) => {
-                dispatch(updateUser(data.doc));           
+            http.getUserById([user.id]).then(({data}) => {
+                dispatch(updateUser(data.users[0]));           
                 setIsLoading(false);
             },(err)=>{
                 setIsLoading(false);

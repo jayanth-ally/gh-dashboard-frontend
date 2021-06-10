@@ -43,7 +43,6 @@ const teams = createSlice({
             return teams;
         },
         [deleteTeamAction.type]: (teams,{payload}) => {
-            console.log(payload.team);
             teams.all = teams.all.filter((team)=> team._id !== payload.team._id);
             teams.selected = {};
             return teams;

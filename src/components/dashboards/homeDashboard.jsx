@@ -9,9 +9,8 @@ import Timeline from "../common/timeline/index";
 
 import * as http from '../../utils/http';
 import {convertDate,dateFormat, getNextDate, getTooltipData} from '../../utils/time-conversion';
-import {addRepos,addPrs, addPastPrs} from '../../store/repos/actions';
 import {addOrgData} from '../../store/org/actions';
-import {addUsers} from '../../store/users/actions';
+import {addUsers,fetchingUsers} from '../../store/users/actions';
 import {addTeams} from '../../store/teams/actions';
 import TopTeams from "./home/topTeams";
 import { getTopFiveTeams } from "../../utils/pr-calculations";
@@ -23,6 +22,7 @@ const HomeDashboard = (props) => {
     const dispatch = useDispatch();
     const repos = useSelector(state => state.repos.all);
     const users = useSelector(state => state.users.all);
+    const fetchingUsersData = useSelector(state => state.users.fetching);
     const teams = useSelector(state => state.teams.all);
     const orgData = useSelector(state => state.org.data);
     const [range,setRange] = useState({
@@ -39,7 +39,6 @@ const HomeDashboard = (props) => {
     const [selectedTimeline,setSelectedTimeline] = useState({key:'last',value:{days:7}})
     const [isLoading,setIsLoading] = useState(false);
     const [loadingData,setLoadingData] = useState({
-        repo:false,
         prs:false,
         users:false,
         teams:false,
@@ -64,22 +63,6 @@ const HomeDashboard = (props) => {
         loadData();
     },[dispatch])
 
-    // useEffect(()=>{
-    //     if((teams.length > 0 && (teams[0].data.range.from !== range.from || teams[0].data.range.to !== range.to))){
-    //         setLoadingData({
-    //             ...loadingData,
-    //             org:true,
-    //             teams:true
-    //         })
-    //         http.getOrgData(range,prevRange).then(({data})=>{
-    //             dispatch(addOrgData(({...data})));
-    //         })
-    //         http.getTeamsData(range).then(({data})=>{
-    //             dispatch(addTeams(data.teams));
-    //         })
-    //     }
-    // },[range])
-
     useEffect(()=>{
         if(orgData.hasOwnProperty('today')){
             setLoadingData({
@@ -88,15 +71,6 @@ const HomeDashboard = (props) => {
             })
         }
     },[orgData])
-
-    useEffect(()=>{
-        if(repos.length > 0){
-            setLoadingData({
-                ...loadingData,
-                repo:false,
-            })
-        }
-    },[repos])
 
     useEffect(()=>{
         if(users.length > 0){
@@ -116,23 +90,8 @@ const HomeDashboard = (props) => {
         }
     },[teams])
 
-    // useEffect(()=>{
-    //     if(teams.length > 0){
-    //         setLoadingData({
-    //             ...loadingData,
-    //             teams:false,
-    //         })
-    //     }
-    // },[teams])
-
-    // useEffect(()=>{
-    //     // if(teams.length>0){
-    //     //     props.history.replace(HOME_ROUTE);
-    //     // }
-    // },[teams])
-
     useEffect(()=>{
-        if(!loadingData.repos && !loadingData.prs && !loadingData.users && !loadingData.teams && !loadingData.org){
+        if(!loadingData.users && !loadingData.teams && !loadingData.org){
             setIsLoading(false);
         }else{
             setIsLoading(true);
@@ -140,20 +99,6 @@ const HomeDashboard = (props) => {
     },[loadingData])
 
     const loadData = () => {
-        if(repos.length === 0){
-            setLoadingData({
-                ...loadingData,
-                repos:true,
-            })
-            http.getRepos().then(({data}) => {
-                dispatch(addRepos(data.repos)); 
-            },(err)=>{
-                setLoadingData({
-                    ...loadingData,
-                    repos:false,
-                })
-            })
-        }
 
         if(!orgData.hasOwnProperty('today')){
             setLoadingData({
@@ -165,11 +110,12 @@ const HomeDashboard = (props) => {
             })
         }
 
-        if(users.length === 0){
+        if(users.length === 0 && !fetchingUsersData){
             setLoadingData({
                 ...loadingData,
                 users:true,
             })
+            dispatch(fetchingUsers(true));
             http.getUsers(range).then(({data}) => {
                 dispatch(addUsers(data.users));    
             },(err)=>{
@@ -201,12 +147,10 @@ const HomeDashboard = (props) => {
                 <Timeline onValueChange={onTimelineChanged} selected={selectedTimeline}/>
             </div>
             
-            {isLoading? <Loading />:(
-                orgData.hasOwnProperty('today')? <>
+                {orgData.hasOwnProperty('today')? <>
                     <Organization orgData={orgData} tooltipData={tooltip} range={range} prevRange={prevRange}/>
-                    <TopTeams teamsData={teams} tooltipData={tooltip} range={range} />
-                </> : <Loading/>
-            )}          
+                </> : <Loading/> }   
+            {teams.length > 0 ?   <TopTeams teamsData={teams} tooltipData={tooltip} range={range} /> : <Loading/>}
         </>
     );
 }

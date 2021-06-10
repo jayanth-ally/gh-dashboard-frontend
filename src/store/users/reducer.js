@@ -5,6 +5,7 @@ import * as localStorage from '../../utils/localStorage';
 import {
     loginUserAction,
     logoutUserAction,
+    fetchingUsersAction,
     addUsersAction,
     clearUsersAction,
     selectUserAction,
@@ -18,7 +19,8 @@ const initialState = {
     current:{
         isLogged:localStorage.isUserLoggedIn(),
         user:localStorage.getUserLogin()
-    }
+    },
+    fetching:false
 }
 
 const users = createSlice({
@@ -35,8 +37,13 @@ const users = createSlice({
             localStorage.logoutUser();
             return users;
         },
+        [fetchingUsersAction.type]: (users,{payload}) => {
+            users.fetching = payload.fetching;
+            return users;
+        },
         [addUsersAction.type]: (users,{payload}) => {
             users.all = payload.all;
+            users.fetching = false;
             return users;
         },
         [clearUsersAction.type]: (users,{payload}) => {
@@ -51,7 +58,7 @@ const users = createSlice({
             const userIndex = users.all.findIndex((user) => user.id === payload.user.id);
             const selected = {...users.all[userIndex],...payload.user};
             users.all[userIndex] = selected;
-            users.selected = selected;
+            // users.selected = selected;
             return users;
         },
         [clearSelectedUserAction.type]: (users,{payload}) => {

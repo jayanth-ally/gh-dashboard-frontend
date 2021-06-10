@@ -6,12 +6,13 @@ import UserCards from '../user/userCards';
 import Loading from "../loading/loading";
 
 import * as http from '../../utils/http';
-import {addUsers,selectUser} from '../../store/users/actions';
+import {addUsers,selectUser,fetchingUsers} from '../../store/users/actions';
 import { HOME_ROUTE } from "../../config/routes";
 
 const UserDashboard = (props) => {
     const dispatch = useDispatch();
     const users = useSelector(state => state.users.all);
+    const fetchingUsersData = useSelector(state => state.users.fetching);
     const [search,setSearch] = useState('');
     const [filter,setFilter] = useState('A-Z');
     const [filteredUsers,setFilteredUsers] = useState([]);
@@ -22,8 +23,9 @@ const UserDashboard = (props) => {
     },[])
 
     useEffect(()=>{
-        if(users.length === 0){
+        if(users.length === 0 && !fetchingUsersData){
             setIsLoading(true);
+            dispatch(fetchingUsers(true));
             http.getUsers().then(({data}) => {
                 dispatch(addUsers(data.users));           
                 setIsLoading(false);
