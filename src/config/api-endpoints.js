@@ -1,5 +1,5 @@
 // Heroku
-const HEROKU_URL = "https://ally-ghdashboard-backend.herokuapp.com/api";
+const HEROKU_URL = "https://ghdashboard-backend.herokuapp.com/api";
 // Localhost
 const LOCALHOST_URL = "http://localhost:5000/api";
 
