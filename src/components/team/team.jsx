@@ -11,7 +11,7 @@ import TeamTimeline from "./timeline";
 import TopUsers from './topUsers';
 
 import * as http from '../../utils/http';
-import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject,getPreviousRange,getTooltipData} from '../../utils/time-conversion';
+import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject,getPreviousRange,getTooltipData,getToday} from '../../utils/time-conversion';
 import {defaultArr,multiArr} from '../../config/chat-items';
 import CircleIndicator from "../common/circleIndicator";
 import { selectTeam } from "../../store/teams/actions";
@@ -32,7 +32,7 @@ const Team = (props) => {
     const [teams,setTeams] = useState([]);
     const [prs,setPrs] = useState([]);
     const [isLoading,setIsLoading] = useState(true);
-    const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
+    const [values, setValues] = useState([[new DateObject().set('date',getToday()).subtract(6, "days"),new DateObject().set('date',getToday())]]);
     const [selectedTimeline,setSelectedTimeline] = useState([{key:'last',value:{days:7}}])
     const [tooltip,setTooltip] = useState({current:'last 7 days',previous:'Previous 7 days'});
     const [teamUsers,setTeamUsers] = useState([]);

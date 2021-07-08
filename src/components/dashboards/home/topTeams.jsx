@@ -4,21 +4,17 @@ import TopChartCard from '../../common/chartCard/topChartCard';
 import Loading from '../../loading/loading';
 
 import {topTeamsArr} from '../../../config/chat-items';
+import { getDataFromTimePeriod } from '../../../utils/time-conversion';
 
-const TopTeams = ({teamsData,tooltipData,range}) => {
+const TopTeams = ({teamsData,tooltipData,range,timeline}) => {
     let teamArr = [];
     teamsData.map((team,i)=>{
-        let result = {};
-        team.values.map((val)=>{
-            if(val.range.from === range.from && val.range.to === range.to){
-                result = val.result;
-            }
-        })
+        const {current} = getDataFromTimePeriod(timeline,team.values);
         teamArr.push({
             _id:team._id,
             name:team.name,
             range,
-            result
+            result:current.result
         })
         
     })

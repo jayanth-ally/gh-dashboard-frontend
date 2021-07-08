@@ -150,3 +150,24 @@ a,a:hover{
 .info{
   z-index: 1000;
 }
+
+.flex-center{
+  display: flex;
+  justify-content: center;
+}
+
+.date-pickers{
+  flex-direction: row !important;
+  justify-content: space-around;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.seven-days-btn{
+  max-width: 300px;
+}
+
+.fifteen-days-btn{
+  float: left;
+  max-width: 300px;
+}

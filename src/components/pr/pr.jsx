@@ -8,7 +8,7 @@ import Loading from '../loading/loading';
 import PRTimeline from './timeline';
 
 import * as http from '../../utils/http';
-import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject,getPreviousRange,getTooltipData} from '../../utils/time-conversion';
+import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject,getPreviousRange,getTooltipData,getToday, getDataFromTimePeriod} from '../../utils/time-conversion';
 import {calculatePrsByDate} from '../../utils/pr-calculations';
 import {defaultArr,multiArr} from '../../config/chat-items';
 import * as charts from '../../utils/chart-conversion';
@@ -24,7 +24,7 @@ const PR = (props) => {
     const org = useSelector(state => state.org.data.org || []);
     const [prs,setPrs] = useState([]);
     const [isLoading,setIsLoading] = useState(false);
-    const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
+    const [values, setValues] = useState([[new DateObject().set('date',getToday()).subtract(6, "days"),new DateObject().set('date',getToday())]]);
     const [selectedTimeline,setSelectedTimeline] = useState([{key:'last',value:{days:7}}])
     const [tooltip,setTooltip] = useState({current:'last 7 days',previous:'Previous 7 days'});
     
@@ -73,7 +73,7 @@ const PR = (props) => {
             }
             return {};
         }else{
-            const prResult = org.filter((val) => val.range.from === range1.from && val.range.to === range1.to)[0];
+            const {current:prResult} = getDataFromTimePeriod(selectedTimeline[i],org);
             if(prResult){
                 let prArr = prs;
                 let d = prResult.data.filter((val) => val.repo.owner === repo.owner && val.repo.name === repo.name)[0];
@@ -127,21 +127,35 @@ const PR = (props) => {
 
     const onTimelineChanged = (val,index,type,obj) => {
         setTooltip(getTooltipData(type,obj));
-        let tl = selectedTimeline;
-        tl[index] = {key:type,value:obj};
-        setSelectedTimeline([...tl])
-
-        let ranges = values;
 
         let from = new DateObject({date:new Date(val.range.from)});
         let to = new DateObject({date:new Date(val.range.to)}).subtract(1,'days');
-        ranges[index] = [from,to];
-        if(type === 'custom7' || type === 'custom15'){
-            getPrsFromApi(index,[from,to]);
+
+        let tl = selectedTimeline;
+        let ranges = values;
+
+        if(index === 0 &&  tl[0].key !== type){
+            selectedTimeline.forEach((_,i)=>{
+                tl[i] = {key:type,value:obj};
+                ranges[i] = [from,to]
+                if(type === 'custom7' || type === 'custom15'){
+                    getPrsFromApi(i,[from,to]);
+                }else{
+                    const tm1 = prs[i];
+                    getPrs(tm1,i,[from,to]);
+                } 
+            })
         }else{
-            const tm1 = prs[index];
-            getPrs(tm1,index,[from,to]);
-        } 
+            tl[index] = {key:type,value:obj};
+            ranges[index] = [from,to];
+            if(type === 'custom7' || type === 'custom15'){
+                getPrsFromApi(index,[from,to]);
+            }else{
+                const tm1 = prs[index];
+                getPrs(tm1,index,[from,to]);
+            } 
+        }
+        setSelectedTimeline([...tl])
         setValues([...ranges])
     }
 
@@ -246,7 +260,7 @@ const PR = (props) => {
                     {values.map((value,i)=>{
                         if(i < prs.length){
                             return <div className='timeline-picker' key={i}>
-                                    <PRTimeline onValueChange={onTimelineChanged} selected={selectedTimeline[i]} index={i} val={value} removeComparison={removeComparison}/>
+                                    <PRTimeline onValueChange={onTimelineChanged} selected={selectedTimeline[i]} selectedZero={selectedTimeline[0]} index={i} val={value} removeComparison={removeComparison}/>
                                 </div>
                         }
                     })}

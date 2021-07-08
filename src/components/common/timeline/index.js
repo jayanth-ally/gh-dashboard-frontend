@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
 import {DateObject} from 'react-multi-date-picker';
 
-import { convertDate, dateFormat, getNextDate } from "../../../utils/time-conversion";
+import { convertDate, dateFormat, getNextDate, getToday } from "../../../utils/time-conversion";
 import { MONTHS, YEAR_SPLIT } from "../../../config/constants";
 
 const Timeline = ({onValueChange,selected}) => {
     let keys = ["quaters","months","last"];
     let lastweek = {
-        from:convertDate(dateFormat(new DateObject().subtract(6,'days'))),
-        to:convertDate(dateFormat(new DateObject().add(1,'days')))
+        from:convertDate(dateFormat(new DateObject().set('date',getToday()).subtract(6,'days'))),
+        to:convertDate(dateFormat(new DateObject().set('date',getToday()).add(1,'days')))
     };
     const [range,setRange] = useState(lastweek)
     const [prevRange,setPrevRange] = useState({
-        from:convertDate(dateFormat(new DateObject().subtract(13,'days'))),
-        to:convertDate(dateFormat(new DateObject().subtract(6,'days')))
+        from:convertDate(dateFormat(new DateObject().set('date',getToday()).subtract(13,'days'))),
+        to:convertDate(dateFormat(new DateObject().set('date',getToday()).subtract(6,'days')))
     })
     const [selectedTimeline,setSelectedTimeline] = useState('last');
     const [timeline,setTimeline] = useState({quaters:[],months:[],last:[
@@ -45,7 +45,7 @@ const Timeline = ({onValueChange,selected}) => {
     },[range])
 
     useEffect(()=>{
-        let today = new Date();
+        let today = getToday();
         let month = today.getMonth();
         let year = today.getFullYear();
         let quaters = [];
@@ -92,7 +92,7 @@ const Timeline = ({onValueChange,selected}) => {
                 quater:"Q3",
                 selected:false
             });
-        }else if(month < 6){
+        }else if(month < 9){
             quaters.push({
                 year:year,
                 quater:"Q3",
@@ -246,14 +246,14 @@ const Timeline = ({onValueChange,selected}) => {
         }else{
             timeline.last.map((t)=>{
                 if(t.selected){
-                    from = new Date();
-                    prevFrom = new Date();
+                    from = getToday();
+                    prevFrom = getToday();
                     from.setDate(from.getDate() - t.days + 1);
                     prevFrom.setDate(prevFrom.getDate() - t.days - t.days + 1);
                     prevFrom = convertDate(prevFrom)
                     from = convertDate(from);
                     prevTo = from;
-                    to = getNextDate(new Date());
+                    to = getNextDate(getToday());
 
                 }
             })

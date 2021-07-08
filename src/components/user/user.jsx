@@ -11,7 +11,7 @@ import UserTimeline from './timeline';
 
 import {selectUser, updateUser} from '../../store/users/actions';
 import * as http from '../../utils/http';
-import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject,getPreviousRange,getTooltipData} from '../../utils/time-conversion';
+import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject,getPreviousRange,getTooltipData,getToday} from '../../utils/time-conversion';
 import {defaultArr,multiArr} from '../../config/chat-items';
 import CircleIndicator from "../common/circleIndicator";
 import { ALL_USERS_ROUTE, HOME_ROUTE } from "../../config/routes";
@@ -27,7 +27,7 @@ const User = (props) => {
     const allUsers = useSelector(state => state.users.all || []);
     const [users,setUsers] = useState([]);
     const [isLoading,setIsLoading] = useState(false);
-    const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
+    const [values, setValues] = useState([[new DateObject().set('date',getToday()).subtract(6, "days"),new DateObject().set('date',getToday())]]);
     const [selectedTimeline,setSelectedTimeline] = useState([{key:'last',value:{days:7}}])
     const [tooltip,setTooltip] = useState({current:'last 7 days',previous:'Previous 7 days'});
     

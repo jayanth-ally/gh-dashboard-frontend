@@ -3,7 +3,7 @@ import Popup from 'reactjs-popup';
 import DatePicker,{DateObject} from 'react-multi-date-picker';
 
 
-import { convertDate, dateFormat, getNextDate,getPreviousRange,getPreviousDate,getRangeFromDateObject } from "../../utils/time-conversion";
+import { convertDate, dateFormat, getNextDate,getPreviousRange,getPreviousDate,getRangeFromDateObject,getToday } from "../../utils/time-conversion";
 import { MONTHS, YEAR_SPLIT } from "../../config/constants";
 
 import {deleteRed} from '../../assets/svg/index';
@@ -17,8 +17,8 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
     //     to:convertDate(dateFormat(val[1]))
     // };
     let lastweek = {
-        from:convertDate(dateFormat(new DateObject().subtract(6,'days'))),
-        to:convertDate(dateFormat(new DateObject().add(1,'days')))
+        from:convertDate(dateFormat(new DateObject().set('date',getToday()).subtract(6,'days'))),
+        to:convertDate(dateFormat(new DateObject().set('date',getToday()).add(1,'days')))
     };
     const [isExpanded,setIsExpanded] = useState(false);
     const onExpandOrCompress = () => {
@@ -26,8 +26,8 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
     }
     const [range,setRange] = useState({from:'',to:''})
     const [prevRange,setPrevRange] = useState({
-        from:convertDate(dateFormat(new DateObject().subtract(13,'days'))),
-        to:convertDate(dateFormat(new DateObject().subtract(6,'days')))
+        from:convertDate(dateFormat(new DateObject().set('date',getToday()).subtract(13,'days'))),
+        to:convertDate(dateFormat(new DateObject().set('date',getToday()).subtract(6,'days')))
     })
 
     const [teamId,setTeamId] = useState(tname._id);
@@ -91,7 +91,7 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
     },[range])
 
     useEffect(()=>{
-        let today = new Date();
+        let today = getToday();
         let month = today.getMonth();
         let year = today.getFullYear();
         let quaters = [];
@@ -301,14 +301,14 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
         }else if(selectedTimeline === 'last'){
             timeline.last.map((t)=>{
                 if(t.selected){
-                    from = new Date();
-                    prevFrom = new Date();
+                    from = getToday();
+                    prevFrom = getToday();
                     from.setDate(from.getDate() - t.days + 1);
                     prevFrom.setDate(prevFrom.getDate() - t.days - t.days + 1);
                     prevFrom = convertDate(prevFrom)
                     from = convertDate(from);
                     prevTo = from;
-                    to = getNextDate(new Date());
+                    to = getNextDate(getToday());
                 }
             })
         }else if(selectedTimeline === 'custom7'){
