@@ -16,7 +16,7 @@ import {
 } from '../../config/routes';
 
 import {calculatePrsByDate} from '../../utils/pr-calculations';
-import { convertDate, convertTime, dateFormat } from "../../utils/time-conversion";
+import { convertDate, convertTime, dateFormat,getToday } from "../../utils/time-conversion";
 import * as charts from '../../utils/chart-conversion';
 
 const PrDashboard = (props) => {
@@ -25,8 +25,8 @@ const PrDashboard = (props) => {
     const [isLoading,setIsLoading] = useState(false);
 
     let range = {
-        from:convertDate(dateFormat(new DateObject().subtract(6,'days'))),
-        to:convertDate(dateFormat(new DateObject().add(1,'days')))
+        from:convertDate(dateFormat(new DateObject().set('date',getToday()).subtract(6,'days'))),
+        to:convertDate(dateFormat(new DateObject().set('date',getToday()).add(1,'days')))
     };
     const [repos,setRepos] = useState([]);
 

@@ -3,7 +3,7 @@ import { MONTHS } from "../config/constants";
 const getDiffDays = (pr) => {
     const lastUpdated = new Date(pr.updated_at);
     const created = new Date(pr.createdAt);
-    const today = new Date();
+    const today = getToday();
     // const diffDays = Math.floor(Math.abs(today - lastUpdated) / (1000 * 60 * 60 * 24));
     const diffDays = Math.floor(Math.abs(today - created) / (1000 * 60 * 60 * 24));
     return diffDays;     
@@ -160,6 +160,63 @@ const getPreviousRange = (range) => {
     }
 }
 
+const getToday = () => {
+    let date = new Date();
+    let currentOffset = date.getTimezoneOffset();
+    let ISTOffset = 330;
+    let istDate = new Date(date.getTime() + (ISTOffset + currentOffset)*60000)
+    return istDate;
+}
+
+const getPreviousQuater = ({year,quater}) => {
+    let key = '';
+    if(quater === 'Q1'){
+        key = (year-1)+" Q4";
+    }else if(quater === 'Q2'){
+        key = year+" Q1";
+    }else if(quater === 'Q3'){
+        key = year+" Q2";
+    }else if(quater === 'Q4'){
+        key = year+" Q3";
+    }
+    return key;
+}
+
+const getPreviousMonth = (name) => {
+    const index = MONTHS.findIndex(month => month === name);
+    if(index === 0){
+        return MONTHS[11]
+    }
+    return MONTHS[index-1]
+}
+
+const getDataFromTimePeriod = (timeline,ranges) => {
+    let key = 7;
+    let previousKey = 7;
+    if(timeline.key === "last"){
+        key = timeline.value.days;
+        const current = ranges.filter((data)=> data.name.toString() === key.toString() && !data.previous)[0];
+        const previous = ranges.filter((data)=>data.name.toString() === key.toString() && data.previous)[0];
+        return {current,previous};
+    }else{
+        if(timeline.key === "quaters"){
+            key = timeline.value.year + " "+timeline.value.quater;
+            previousKey = getPreviousQuater(timeline.value);
+        }else if(timeline.key === "months"){
+            key = timeline.value.name;
+            previousKey = getPreviousMonth(key);
+        }
+        if(key !== 7){
+            const current = ranges.filter((data)=>data.name.toString() === key.toString())[0];
+            const previous = ranges.filter((data)=>data.name.toString() === previousKey.toString())[0];
+            return {current,previous};
+        }else{
+            return {current:{},previous:{},message:"Non expected values provided"};
+        }
+    }
+
+}
+
 export {
     getDiffDays,
     msToDHM,
@@ -173,5 +230,7 @@ export {
     getPreviousDate,
     getTooltipData,
     getRangeFromDateObject,
-    getPreviousRange
+    getPreviousRange,
+    getToday,
+    getDataFromTimePeriod
 }

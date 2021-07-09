@@ -1,4 +1,5 @@
 import * as http from './http';
+import { getToday } from './time-conversion';
 var github = require('octonode');
 
 export default class Client{
@@ -47,7 +48,7 @@ export default class Client{
     }
 
     getPrs = async (mode,count,last,state) => {
-        let today = new Date();
+        let today = getToday();
         if(count){
             if(last === 'days'){
                 today = new Date(today.setDate(today.getDate() - count));

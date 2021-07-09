@@ -11,7 +11,7 @@ import TeamTimeline from "./timeline";
 import TopUsers from './topUsers';
 
 import * as http from '../../utils/http';
-import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject,getPreviousRange,getTooltipData} from '../../utils/time-conversion';
+import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject,getPreviousRange,getTooltipData,getToday, getDataFromTimePeriod} from '../../utils/time-conversion';
 import {defaultArr,multiArr} from '../../config/chat-items';
 import CircleIndicator from "../common/circleIndicator";
 import { selectTeam } from "../../store/teams/actions";
@@ -27,12 +27,13 @@ const Team = (props) => {
     const repo = useSelector(state => state.repos.selected || {});
     const allTeams = useSelector(state => state.teams.all || []);
     const selectedTeam = useSelector(state => state.teams.selected || {})
-    const users = useSelector(state => state.users.all);
+    const userState = useSelector(state => state.users);
+    const users = userState.all;
+    const fetchingUsers = userState.fetching;
     const [title,setTitle] = useState('');
     const [teams,setTeams] = useState([]);
-    const [prs,setPrs] = useState([]);
     const [isLoading,setIsLoading] = useState(true);
-    const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
+    const [values, setValues] = useState([[new DateObject().set('date',getToday()).subtract(6, "days"),new DateObject().set('date',getToday())]]);
     const [selectedTimeline,setSelectedTimeline] = useState([{key:'last',value:{days:7}}])
     const [tooltip,setTooltip] = useState({current:'last 7 days',previous:'Previous 7 days'});
     const [teamUsers,setTeamUsers] = useState([]);
@@ -42,31 +43,33 @@ const Team = (props) => {
     },[])
 
     useEffect(()=>{
-        if(selectedTeam.hasOwnProperty('users')){
-            setIsLoading(false);
-        }
-        if(selectedTeam.hasOwnProperty('users') && teamUsers.length === 0 && (selectedTimeline[0].key !== 'custom7' && selectedTimeline[0].key !== 'custom15')){
-            let team = selectedTeam;
-            let userArr = [];
-            let userIds = [];
-            team.users.forEach((u)=> {
-                const index = users.findIndex((usr) => usr.id === u.id);
-                if(!users[index].hasOwnProperty('count')){
-                    userIds.push(u.id)
-                }else{
-                    userArr.push(users[index]);
-                }
-            });
-
-            http.getUserById(userIds).then(({data})=>{
-                data.users.forEach((usr)=>{
-                    userArr.push(usr);
-                    dispatch(updateUser(usr));
+        if(!fetchingUsers){
+            if(selectedTeam.hasOwnProperty('users')){
+                setIsLoading(false);
+            }
+            if(selectedTeam.hasOwnProperty('users') && teamUsers.length === 0 && (selectedTimeline[0].key !== 'custom7' && selectedTimeline[0].key !== 'custom15')){
+                let team = selectedTeam;
+                let userArr = [];
+                let userIds = [];
+                team.users.forEach((u)=> {
+                    const index = users.findIndex((usr) => usr.id === u.id);
+                    if(!users[index].hasOwnProperty('count')){
+                        userIds.push(u.id)
+                    }else{
+                        userArr.push(users[index]);
+                    }
+                });
+    
+                http.getUserById(userIds).then(({data})=>{
+                    data.users.forEach((usr)=>{
+                        userArr.push(usr);
+                        dispatch(updateUser(usr));
+                    })
+                    setTeamUsers([...userArr]);
                 })
-                setTeamUsers([...userArr]);
-            })
+            }
         }
-    },[selectedTeam])
+    },[selectedTeam,fetchingUsers])
 
     useEffect(()=>{
         if(allTeams.length > 0){
@@ -78,8 +81,7 @@ const Team = (props) => {
                 const team = allTeams[index];
                 dispatch(selectTeam(team));
                 setTitle(team.name);
-                const tm = getTeam(team,values[0]);
-                setTeams([tm])
+                getTeam(team,selectedTimeline[0],0,values[0]);
             }
         }
     },[allTeams])
@@ -94,19 +96,35 @@ const Team = (props) => {
         }
     },[teamUsers])
 
-    const getTeam = (tm,rng) => {
+    const getTeam = (tm,tl,i,rng) => {
         let range1 = getRangeFromDateObject(rng);
         let prevRange1 = getPreviousRange(range1);
 
         if(tm && tm.hasOwnProperty('data')){
-            return tm;
+            const d = {
+                _id:tm._id,
+                name:tm.name,
+                count:tm.count,
+                users:tm.users,
+                range:range1,
+                result:tm.result,
+                data:tm.data,
+                prevData:tm.prevData
+            };
+            if(teams.length > 0){
+                let tms = teams;
+                tms[i] = d;
+                setTeams([...tms])
+            }else{
+                setTeams([d]);
+            }
+            return {};
         }
-        const teamResult = tm.values.filter(val => val.range.from === range1.from && val.range.to === range1.to)[0];
+        const {current:teamResult,previous} = getDataFromTimePeriod(tl,tm.values);
         if(teamResult){
             const result = teamResult.result;
             const data = teamResult.data;
-            const prevData = tm.values.filter(val => val.range.from === prevRange1.from && val.range.to === prevRange1.to)[0].result;
-            return {
+            const d = {
                 _id:tm._id,
                 name:tm.name,
                 count:tm.count,
@@ -114,7 +132,14 @@ const Team = (props) => {
                 range:range1,
                 result,
                 data,
-                prevData
+                prevData:previous.result
+            };
+            if(teams.length > 0){
+                let tms = teams;
+                tms[i] = d;
+                setTeams([...tms])
+            }else{
+                setTeams([d]);
             }
         }else{
             console.log('invalid result');
@@ -147,24 +172,37 @@ const Team = (props) => {
 
     const onTimelineChanged = (val,t_id,index,type,obj) => {
         setTooltip(getTooltipData(type,obj));
-        let tl = selectedTimeline;
-        tl[index] = {key:type,value:obj};
-        setSelectedTimeline([...tl])
-
-        let ranges = values;
 
         let from = new DateObject({date:new Date(val.range.from)});
         let to = new DateObject({date:new Date(val.range.to)}).subtract(1,'days');
-        ranges[index] = [from,to];
-        if(type === 'custom7' || type === 'custom15'){
-            getTeamFromApi(t_id,index,[from,to]);
+
+        let tl = selectedTimeline;
+        let ranges = values;
+        
+        if(index === 0 &&  tl[0].key !== type){
+            selectedTimeline.forEach((_,i)=>{
+                const id = teams[i]._id;
+                tl[i] = {key:type,value:obj};
+                ranges[i] = [from,to]
+                if(type === 'custom7' || type === 'custom15'){
+                    getTeamFromApi(id,i,[from,to]);
+                }else{
+                    const tm1 = allTeams.filter((tm)=>tm._id === id)[0];
+                    getTeam(tm1,tl[i],i,[from,to]);
+                } 
+            })
         }else{
-            const tm1 = allTeams.filter((tm)=>tm._id === t_id)[0];
-            const tm = getTeam(tm1,[from,to]);
-            let tms = teams;
-            tms[index] = tm;
-            setTeams([...tms])
-        } 
+            tl[index] = {key:type,value:obj};
+            ranges[index] = [from,to];
+            if(type === 'custom7' || type === 'custom15'){
+                getTeamFromApi(t_id,index,[from,to]);
+            }else{
+                const tm1 = allTeams.filter((tm)=>tm._id === t_id)[0];
+                getTeam(tm1,tl[index],index,[from,to]);
+            } 
+        }
+
+        setSelectedTimeline([...tl])
         setValues([...ranges])
 
         // if(val.range.from !== range.from || val.range.to !== range.to){
@@ -220,7 +258,6 @@ const Team = (props) => {
     }
 
     const onTeamSelected = (id,i,selectedTime) => {
-        let arr = teams;
         let team = teams[0];
         allTeams.map((t)=>{
             if(t._id === id){
@@ -230,8 +267,7 @@ const Team = (props) => {
         if(selectedTime === 'custom7' || selectedTime === 'custom15'){
             getTeamFromApi(id,i,values[i]);
         }else{
-            arr[i]=getTeam(team,values[i]);
-            setTeams([...arr]);
+            getTeam(team,selectedTimeline[i],i,values[i]);
         }        
     }
 
@@ -284,7 +320,7 @@ const Team = (props) => {
                                 <Collapsible trigger="Users (Top 3)">
                                     <hr/>
                                     <div className="all-user-cards bg-alice-blue">
-                                            <TopUsers usersData={teamUsers} tooltipData={tooltip} range={rng} />
+                                            <TopUsers usersData={teamUsers} tooltipData={tooltip} range={rng} timeline={selectedTimeline[0]}/>
                                     </div>
                                 </Collapsible>
                             </div>
@@ -390,7 +426,7 @@ const Team = (props) => {
                     {values.map((value,i)=>{
                         if(i<teams.length){
                             return <div className='timeline-picker' key={i}>
-                                    <TeamTimeline onValueChange={onTimelineChanged} selected={selectedTimeline[i]} tname={{_id:teams[i]._id,name:teams[i].name}} teams={allTeams} index={i} val={value} removeComparison={removeComparison} onTeamSelected={onTeamSelected}/>
+                                    <TeamTimeline onValueChange={onTimelineChanged} selected={selectedTimeline[i]} selectedZero={selectedTimeline[0]} tname={{_id:teams[i]._id,name:teams[i].name}} teams={allTeams} index={i} val={value} removeComparison={removeComparison} onTeamSelected={onTeamSelected}/>
                                 </div>
                         }
                     })}

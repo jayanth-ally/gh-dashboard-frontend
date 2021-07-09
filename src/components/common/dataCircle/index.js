@@ -14,7 +14,7 @@ const DataCircle = ({title,previous,current,tooltipData,reverse=false,prCycle=fa
                 </HtmlTooltip>
             </div>
             <div className="card-body" style={{padding:'11px'}}>
-                <div className={prCycle ? (comparePrCycle(previous,current) ? "row pr-cycle red" : "row pr-cycle green") : (previous > current && !reverse) ? "row pr-cycle red" : "row pr-cycle green"}>
+                <div className={prCycle ? (comparePrCycle(previous,current) ? "row pr-cycle red" : "row pr-cycle green") : (previous > current) ? `row pr-cycle ${reverse ? "green" : "red"}` : `row pr-cycle ${reverse ? "red" : "green"}`}>
                     <div className="pr-cycle-circle">
                         <div className="old-data">
                             {previous}

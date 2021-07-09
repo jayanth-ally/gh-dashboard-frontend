@@ -11,7 +11,7 @@ import UserTimeline from './timeline';
 
 import {selectUser, updateUser} from '../../store/users/actions';
 import * as http from '../../utils/http';
-import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject,getPreviousRange,getTooltipData} from '../../utils/time-conversion';
+import {convertDate, convertTimeToDays, dateFormat, getNextDate, getRangeFromDateObject,getPreviousRange,getTooltipData,getToday, getDataFromTimePeriod} from '../../utils/time-conversion';
 import {defaultArr,multiArr} from '../../config/chat-items';
 import CircleIndicator from "../common/circleIndicator";
 import { ALL_USERS_ROUTE, HOME_ROUTE } from "../../config/routes";
@@ -27,7 +27,7 @@ const User = (props) => {
     const allUsers = useSelector(state => state.users.all || []);
     const [users,setUsers] = useState([]);
     const [isLoading,setIsLoading] = useState(false);
-    const [values, setValues] = useState([[new DateObject().subtract(6, "days"),new DateObject()]]);
+    const [values, setValues] = useState([[new DateObject().set('date',getToday()).subtract(6, "days"),new DateObject().set('date',getToday())]]);
     const [selectedTimeline,setSelectedTimeline] = useState([{key:'last',value:{days:7}}])
     const [tooltip,setTooltip] = useState({current:'last 7 days',previous:'Previous 7 days'});
     
@@ -43,14 +43,14 @@ const User = (props) => {
             }else{
                 const usr = allUsers[index];
                 dispatch(selectUser(usr));
-                getUser(usr,0,values[0]);
+                getUser(usr,selectedTimeline[0],0,values[0]);
             }
         }else{
             props.history.replace(HOME_ROUTE);
         }
     },[allUsers])
 
-    const getUser = (usr,i,rng) => {
+    const getUser = (usr,tl,i,rng) => {
         let range1 = getRangeFromDateObject(rng);
         let prevRange1 = getPreviousRange(range1);
         if(!usr.hasOwnProperty('count')){
@@ -81,8 +81,8 @@ const User = (props) => {
                 },err => setIsLoading(false))
             }else{
                 http.getUserById([usr.id]).then(({data})=>{
-                    getUser(data.users[0],i,rng);
                     dispatch(updateUser(data.users[0]));
+                    getUser(data.users[0],tl,i,rng);
                     setIsLoading(false);
                 },err => setIsLoading(false))
             }
@@ -110,13 +110,13 @@ const User = (props) => {
                 }
                 return {};
             }
-            const userResult = usr.values.filter(val => val.range.from === range1.from && val.range.to === range1.to)[0];
+            const {current:userResult,previous} = getDataFromTimePeriod(tl,usr.values);
             if(userResult){
                 let usrs = users;
                 const result = userResult.result;
                 const prs = userResult.prs;
                 const data = userResult.data;
-                const prevData = usr.values.filter(val => val.range.from === prevRange1.from && val.range.to === prevRange1.to)[0].result;
+                const prevData = previous.result;
                 let u = {
                     id:usr.id,
                     login:usr.login,
@@ -142,7 +142,7 @@ const User = (props) => {
         }
     }
 
-    const getUserFromApi = (u_id,index,val) =>{
+    const getUserFromApi = (u_id,tl,index,val) =>{
         let from = val[0];
         let to = val[1];
         let range = {
@@ -160,7 +160,7 @@ const User = (props) => {
             http.getUserByRange(range,[u_id]).then(({data})=>{
                 let usrs = users;
                 // console.log(data.users);
-                getUser(data.users[0],index,val);
+                getUser(data.users[0],tl,index,val);
                 // usrs[index] = u;
                 // setUsers([...usrs])
                 setIsLoading(false);
@@ -170,24 +170,37 @@ const User = (props) => {
 
     const onTimelineChanged = (val,u_id,index,type,obj) => {
         setTooltip(getTooltipData(type,obj));
-        let tl = selectedTimeline;
-        tl[index] = {key:type,value:obj};
-        setSelectedTimeline([...tl])
-
-        let ranges = values;
 
         let from = new DateObject({date:new Date(val.range.from)});
         let to = new DateObject({date:new Date(val.range.to)}).subtract(1,'days');
-        ranges[index] = [from,to];
-        if(type === 'custom7' || type === 'custom15'){
-            getUserFromApi(u_id,index,[from,to]);
+
+        let tl = selectedTimeline;
+        let ranges = values;
+        
+        if(index === 0 &&  tl[0].key !== type){
+            selectedTimeline.forEach((_,i)=>{
+                const id = users[i].id;
+                tl[i] = {key:type,value:obj};
+                ranges[i] = [from,to]
+                if(type === 'custom7' || type === 'custom15'){
+                    getUserFromApi(id,tl[i],i,[from,to]);
+                }else{
+                    const usr1 = allUsers.filter((tm)=>tm.id === u_id)[0];
+                    getUser(usr1,tl[i],i,[from,to]);
+                } 
+            })
         }else{
-            const tm1 = allUsers.filter((tm)=>tm.id === u_id)[0];
-            getUser(tm1,index,[from,to]);
-            // let tms = users;
-            // tms[index] = tm;
-            // setUsers([...tms])
-        } 
+            tl[index] = {key:type,value:obj};
+            ranges[index] = [from,to];
+            if(type === 'custom7' || type === 'custom15'){
+                getUserFromApi(u_id,tl[index],index,[from,to]);
+            }else{
+                const usr1 = allUsers.filter((tm)=>tm.id === u_id)[0];
+                getUser(usr1,tl[index],index,[from,to]);
+            } 
+        }
+
+        setSelectedTimeline([...tl])
         setValues([...ranges])
     }
 
@@ -200,9 +213,9 @@ const User = (props) => {
             }
         });
         if(selectedTime === 'custom7' || selectedTime === 'custom15'){
-            getUserFromApi(id,i,values[i]);
+            getUserFromApi(id,selectedTimeline[i],i,values[i]);
         }else{
-            getUser(usr,i,values[i]);
+            getUser(usr,selectedTimeline[i],i,values[i]);
             // setUsers([...arr]);
         }        
     }
@@ -223,7 +236,7 @@ const User = (props) => {
     useEffect(()=>{
         if(user.hasOwnProperty('values')){
             setIsLoading(false);
-            getUser(user,0,values[0]);
+            getUser(user,selectedTimeline[0],0,values[0]);
             // setUsers([usr])
         }
     },[user])
@@ -468,7 +481,7 @@ const User = (props) => {
                     {values.map((value,i)=>{
                         if(i < users.length){
                             return <div className='timeline-picker' key={i}>
-                                    <UserTimeline onValueChange={onTimelineChanged} selected={selectedTimeline[i]} uname={{id:users[i].id,login:users[i].login}} users={allUsers} index={i} val={value} removeComparison={removeComparison} onUserSelected={onUserSelected}/>
+                                    <UserTimeline onValueChange={onTimelineChanged} selected={selectedTimeline[i]} selectedZero={selectedTimeline[0]} uname={{id:users[i].id,login:users[i].login}} users={allUsers} index={i} val={value} removeComparison={removeComparison} onUserSelected={onUserSelected}/>
                                 </div>
                         }
                     })}

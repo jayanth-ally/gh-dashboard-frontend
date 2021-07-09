@@ -8,25 +8,18 @@ import {info} from '../../../assets/svg/index';
 
 import * as http from '../../../utils/http';
 import { calculateMetrics, calculatePrCycle, comparePrCycle } from '../../../utils/pr-calculations';
-import { convertDate, convertTimeToDays } from '../../../utils/time-conversion';
+import { convertDate, convertTimeToDays, getDataFromTimePeriod } from '../../../utils/time-conversion';
 import {prsCurrent,prsLastDay,prsPrevious} from '../../../config/chat-items';
 
 import './style.css';
 import DataCircle from '../../common/dataCircle';
 import DataCircles from '../../common/dataCircle/dataCircles';
 
-const Organization = ({orgData,tooltipData,range,prevRange}) => {
+const Organization = ({orgData,tooltipData,timeline}) => {
     const {today,org} = orgData;
-    let current = {};
-    let previous = {};
-    org.map((obj)=>{
-        if(obj.range.from === range.from && obj.range.to === range.to){
-            current = obj.result;
-        }
-        if(obj.range.from === prevRange.from && obj.range.to === prevRange.to){
-            previous = obj.result;
-        }
-    })
+    const {current:currentObject,previous:previousObject} = getDataFromTimePeriod(timeline,org);
+    const current = currentObject.result;
+    const previous = previousObject.result;
     return <>
     <div className="home-body py-5 bg-alice-blue">
         <DataCircles 
@@ -38,7 +31,7 @@ const Organization = ({orgData,tooltipData,range,prevRange}) => {
             <div className="flex-container row">               
                 <ChartCard
                     result={today[0]}
-                    item={{...prsLastDay,name:' PRS in last 24hrs'}}
+                    item={{...prsLastDay,name:' PRs in last 24hrs'}}
                 />
                 <ChartCard
                     result={current}

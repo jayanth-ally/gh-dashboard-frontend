@@ -8,7 +8,7 @@ import Organization from './home/organization';
 import Timeline from "../common/timeline/index";
 
 import * as http from '../../utils/http';
-import {convertDate,dateFormat, getNextDate, getTooltipData} from '../../utils/time-conversion';
+import {convertDate,dateFormat, getNextDate, getTooltipData,getToday} from '../../utils/time-conversion';
 import {addOrgData} from '../../store/org/actions';
 import {addUsers,fetchingUsers} from '../../store/users/actions';
 import {addTeams} from '../../store/teams/actions';
@@ -25,12 +25,12 @@ const HomeDashboard = (props) => {
     const teams = useSelector(state => state.teams.all);
     const orgData = useSelector(state => state.org.data);
     const [range,setRange] = useState({
-        from:convertDate(dateFormat(new DateObject().subtract(6,'days'))),
-        to:convertDate(dateFormat(new DateObject().add(1,'days')))
+        from:convertDate(dateFormat(new DateObject().set('date',getToday()).subtract(6,'days'))),
+        to:convertDate(dateFormat(new DateObject().set('date',getToday()).add(1,'days')))
     })
     const [prevRange,setPrevRange] = useState({
-        from:convertDate(dateFormat(new DateObject().subtract(13,'days'))),
-        to:convertDate(dateFormat(new DateObject().subtract(6,'days')))
+        from:convertDate(dateFormat(new DateObject().set('date',getToday()).subtract(13,'days'))),
+        to:convertDate(dateFormat(new DateObject().set('date',getToday()).subtract(6,'days')))
     })
 
     const [topFiveTeams,setTopFiveTeams] = useState([]);
@@ -146,8 +146,8 @@ const HomeDashboard = (props) => {
                 <Timeline onValueChange={onTimelineChanged} selected={selectedTimeline}/>
             </div>
             
-            {orgData.hasOwnProperty('today')? <Organization orgData={orgData} tooltipData={tooltip} range={range} prevRange={prevRange}/>: <Loading/> }   
-            {teams.length > 0 ?   <TopTeams teamsData={teams} tooltipData={tooltip} range={range} /> : <Loading/>}
+            {orgData.hasOwnProperty('today')? <Organization orgData={orgData} tooltipData={tooltip} timeline={selectedTimeline}/>: <Loading/> }   
+            {teams.length > 0 ?   <TopTeams teamsData={teams} tooltipData={tooltip} range={range} timeline={selectedTimeline}/> : <Loading/>}
         </>
     );
 }

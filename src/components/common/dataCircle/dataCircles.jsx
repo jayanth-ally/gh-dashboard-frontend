@@ -72,7 +72,7 @@ const DataCircles = ({current,previous,tooltipData}) => {
                         <br/>added in {tooltipData.current}</p>}
                 />
                 <DataCircle 
-                    title="Additions"
+                    title="Deletions"
                     previous={previous.files.deletions}
                     current={current.files.deletions}
                     tooltipData={<p>

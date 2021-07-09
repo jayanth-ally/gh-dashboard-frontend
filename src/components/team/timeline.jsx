@@ -3,31 +3,31 @@ import Popup from 'reactjs-popup';
 import DatePicker,{DateObject} from 'react-multi-date-picker';
 
 
-import { convertDate, dateFormat, getNextDate,getPreviousRange,getPreviousDate,getRangeFromDateObject } from "../../utils/time-conversion";
+import { convertDate, dateFormat, getNextDate,getPreviousRange,getPreviousDate,getRangeFromDateObject,getToday } from "../../utils/time-conversion";
 import { MONTHS, YEAR_SPLIT } from "../../config/constants";
 
 import {deleteRed} from '../../assets/svg/index';
 
-const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeComparison,onTeamSelected}) => {
+const TeamTimeline = ({onValueChange,selected,selectedZero,tname,teams,index,val,removeComparison,onTeamSelected}) => {
 
-
+    
     let keys = ["quaters","months","last"];
     // let lastweek = {
     //     from:convertDate(dateFormat(val[0])),
     //     to:convertDate(dateFormat(val[1]))
     // };
     let lastweek = {
-        from:convertDate(dateFormat(new DateObject().subtract(6,'days'))),
-        to:convertDate(dateFormat(new DateObject().add(1,'days')))
+        from:convertDate(dateFormat(new DateObject().set('date',getToday()).subtract(6,'days'))),
+        to:convertDate(dateFormat(new DateObject().set('date',getToday()).add(1,'days')))
     };
     const [isExpanded,setIsExpanded] = useState(false);
     const onExpandOrCompress = () => {
         setIsExpanded(!isExpanded);
     }
-    const [range,setRange] = useState({from:'',to:''})
+    const [range,setRange] = useState(getRangeFromDateObject(val))
     const [prevRange,setPrevRange] = useState({
-        from:convertDate(dateFormat(new DateObject().subtract(13,'days'))),
-        to:convertDate(dateFormat(new DateObject().subtract(6,'days')))
+        from:convertDate(dateFormat(new DateObject().set('date',getToday()).subtract(13,'days'))),
+        to:convertDate(dateFormat(new DateObject().set('date',getToday()).subtract(6,'days')))
     })
 
     const [teamId,setTeamId] = useState(tname._id);
@@ -59,6 +59,10 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
     },[])
 
     useEffect(()=>{
+        setTeamId(tname._id)
+    },[tname])
+
+    useEffect(()=>{
         if(range.from === '' || range.to === ''){
             if(selectedTimeline === 'custom7' || selectedTimeline === 'custom15'){
                 setRange(getRangeFromDateObject(val));
@@ -68,7 +72,7 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
         }else{
             let obj = {
                 days:7,
-                selected:true
+                selected:false
             }
     
             if(selectedTimeline === 'custom7'){
@@ -86,12 +90,16 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
                     }
                 })
             }
+            if(!obj.selected){
+                obj = selected.value;
+            }
+            
             onValueChange({range,prevRange},teamId,index,selectedTimeline,obj);
         }
     },[range])
 
     useEffect(()=>{
-        let today = new Date();
+        let today = getToday();
         let month = today.getMonth();
         let year = today.getFullYear();
         let quaters = [];
@@ -138,7 +146,7 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
                 quater:"Q3",
                 selected:false
             });
-        }else if(month < 6){
+        }else if(month < 9){
             quaters.push({
                 year:year,
                 quater:"Q3",
@@ -232,7 +240,7 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
     },[selected])
 
     useEffect(()=>{
-        if(timeline.quaters.length > 0){
+        if(timeline.quaters.length > 0 && range.from !== ''){
             if(selectedTimeline === 'custom7' || selectedTimeline === 'custom15'){
                 let v = getRangeFromDateObject(val);
                 if(v.from !== range.from && v.to !== range.to){
@@ -301,14 +309,14 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
         }else if(selectedTimeline === 'last'){
             timeline.last.map((t)=>{
                 if(t.selected){
-                    from = new Date();
-                    prevFrom = new Date();
+                    from = getToday();
+                    prevFrom = getToday();
                     from.setDate(from.getDate() - t.days + 1);
                     prevFrom.setDate(prevFrom.getDate() - t.days - t.days + 1);
                     prevFrom = convertDate(prevFrom)
                     from = convertDate(from);
                     prevTo = from;
-                    to = getNextDate(new Date());
+                    to = getNextDate(getToday());
                 }
             })
         }else if(selectedTimeline === 'custom7'){
@@ -416,9 +424,14 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
         onTeamSelected(e.target.value,index,selectedTimeline)
     }
 
+    const getRangeString = () => {
+        const {from,to} = getRangeFromDateObject(val);
+        return from+' ~ '+getPreviousDate(to);
+    }
+    
     return <>
     <div className="dynamic-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer" style={{padding:'2px 5px',border:'2px solid #13ce95'}} onClick={()=>setIsExpanded(true)}>
-        {range.from+' ~ '+getPreviousDate(range.to)}    
+        {getRangeString()}    
     </div>
     <Popup open={isExpanded} onClose={()=>setIsExpanded(false)}>
         <div className='team-popup'>
@@ -431,38 +444,40 @@ const TeamTimeline = ({onValueChange,selected,tname,teams,index,val,removeCompar
                     })}
                 </select>}
             <div className="row">
-                <div className="btn-toolbar mb-2 mb-md-0 col-md-9" style={{display:'flex',flexDirection:'column'}}>
+                <div className={(index !== 0 &&(selectedZero.key === "custom7" || selectedZero.key === "custom15"))?"btn-toolbar mb-2 mb-md-0 col-md-1":"btn-toolbar mb-2 mb-md-0 col-md-12"} style={{display:'flex',flexDirection:'column'}}>
                     {keys.map((k)=>{
                         return <div className="btn-group mr-2" key={k} style={{margin:'15px'}}>
-                            {k === "last" && <button className="btn btn-sm btn-outline-info" disabled>Last</button>}
+                            {(k === "last" && (index === 0 || (index !== 0 && selectedZero.key === "last"))) && <button className="btn btn-sm btn-outline-info" disabled>Last</button>}
                             {timeline[k].map((t,i)=>{
-                                let name = '';
-                                if(k==="quaters"){
-                                    name = t.year+' '+t.quater;
-                                }else if(k==='months'){
-                                    name = t.name;
-                                }else{
-                                    name = t.days;
+                                if(index === 0 || k===selectedZero.key){
+                                    let name = '';
+                                    if(k==="quaters"){
+                                        name = t.year+' '+t.quater;
+                                    }else if(k==='months'){
+                                        name = t.name;
+                                    }else{
+                                        name = t.days;
+                                    }
+                                    return <button className={t.selected?"btn btn-sm btn-info":"btn btn-sm btn-outline-info"} key={name} onClick={()=>selectTimeline(k,i)}>{name}</button>
                                 }
-                                return <button className={t.selected?"btn btn-sm btn-info":"btn btn-sm btn-outline-info"} key={name} onClick={()=>selectTimeline(k,i)}>{name}</button>
                             })}
-                            {k === "last" && <button className="btn btn-sm btn-outline-info" disabled>days</button>}
+                            {(k === "last" && (index === 0 || (index !== 0 && selectedZero.key === "last"))) && <button className="btn btn-sm btn-outline-info" disabled>days</button>}
                         </div>
                     })}        
                 </div>
-                <div className='date-pickers col-md-3' style={{display:'flex',flexDirection:'column'}}>
+                {(index === 0 || selectedZero.key === "custom7" || selectedZero.key === "custom15") && <div className='date-pickers' style={{display:'flex'}}>
                     <div className="7-days-btn" style={{margin:'5px'}}>
                         Custom select
                     </div>
-                    <div className="7-days-btn" style={{margin:'5px'}}>
+                    {(index === 0 || selectedZero.key === "custom7") && <div className="seven-days-btn" style={{margin:'5px'}}>
                         <div className="label" style={{width:'100%',marginBottom:'5px'}}>7 days</div>
                         <DatePicker value={value7} onChange={(val)=>onValue7Changed(val)}  type="button" range showOtherDays hideOnScroll placeholder="7 days"></DatePicker>
-                    </div>
-                    <div className="15-days-btn" style={{margin:'5px'}}>
+                    </div>}
+                    {(index === 0 || selectedZero.key === "custom15") && <div className="fifteen-days-btn" style={{margin:'5px'}}>
                         <div className="label" style={{width:'100%',marginBottom:'5px'}}>15 days</div>
                         <DatePicker value={value15} onChange={(val)=>onValue15Changed(val)}  type="button" range showOtherDays hideOnScroll placeholder="15 days"></DatePicker>
-                    </div>
-                </div>
+                    </div>}
+                </div>}
             </div>
         </div>
     </Popup>

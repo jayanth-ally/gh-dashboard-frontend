@@ -1,4 +1,4 @@
-import {convertDate,convertTimeToDays,getNextDate,getPreviousDate} from './time-conversion';
+import {convertDate,convertTimeToDays,getNextDate,getPreviousDate,getToday} from './time-conversion';
 import { MIN_PR_CYCLE_TIME } from '../config/constants';
 
 const calculatePrsByDate = (prs,options={}) => {
@@ -7,14 +7,14 @@ const calculatePrsByDate = (prs,options={}) => {
         // return {message:"No Prs available",count:0,resultSet};
     }
     // prs = filterPrsByDate(prs,options);
-    let lastDate = new Date().toISOString();
-    let endDate = new Date().toISOString();
+    let lastDate = getToday().toISOString();
+    let endDate = getToday().toISOString();
     if(options.hasOwnProperty('from') && options.hasOwnProperty('to')){
         lastDate = new Date(options.from).toISOString();
         endDate = new Date(options.to).toISOString();
     }else if(options.hasOwnProperty('from')){
         lastDate = new Date(options.from).toISOString();
-        endDate = new Date().toISOString();
+        endDate = getToday().toISOString();
     }else{
         prs.map((pr)=>{
             if(pr.updatedAt < lastDate){
@@ -52,19 +52,19 @@ const filterPrsByDate = (prs,options) => {
     let from = '';
     let to = '';
     if(options.hasOwnProperty('lastdays')){
-        to = new Date();
-        from = new Date();       
+        to = getToday();
+        from = getToday();       
         from.setDate(to.getDate() - options.lastdays);
     }else if(options.hasOwnProperty('from') && options.hasOwnProperty('to')){
         from = new Date(options.from);
         to = new Date(options.to);
     }else if(options.hasOwnProperty('from')){
         from = new Date(options.from);
-        to = new Date();
+        to = getToday();
     }else{
         // default show metrics for last 7 days
-        to = new Date();
-        from = new Date();
+        to = getToday();
+        from = getToday();
         from.setDate(to.getDate() - 7);
         // For testing purpose
         // from.setDate(to.getDate() - 30);
@@ -411,19 +411,19 @@ const calculatePrCycle = (prs,options={}) => {
     let from = '';
     let to = '';
     if(options.hasOwnProperty('lastdays')){
-        to = new Date();
-        from = new Date();       
+        to = getToday();
+        from = getToday();       
         from.setDate(to.getDate() - options.lastdays);
     }else if(options.hasOwnProperty('from') && options.hasOwnProperty('to')){
         from = new Date(options.from);
         to = new Date(options.to);
     }else if(options.hasOwnProperty('from')){
         from = new Date(options.from);
-        to = new Date();
+        to = getToday();
     }else{
         // default show metrics for last 7 days
-        to = new Date();
-        from = new Date();
+        to = getToday();
+        from = getToday();
         from.setDate(to.getDate() - 6);
     }
 

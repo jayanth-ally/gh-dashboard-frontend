@@ -20,7 +20,7 @@ import {
 } from '../../config/routes';
 
 import {calculatePrsByDate} from '../../utils/pr-calculations';
-import { convertDate, convertTime, dateFormat } from "../../utils/time-conversion";
+import { convertDate, convertTime, dateFormat,getDataFromTimePeriod,getToday } from "../../utils/time-conversion";
 import * as charts from '../../utils/chart-conversion';
 
 const TeamDashboard = (props) => {
@@ -31,8 +31,8 @@ const TeamDashboard = (props) => {
     const [isLoading,setIsLoading] = useState(true);
     const [showMenu,setShowMenu] = useState([]);
     let range = {
-        from:convertDate(dateFormat(new DateObject().subtract(6,'days'))),
-        to:convertDate(dateFormat(new DateObject().add(1,'days')))
+        from:convertDate(dateFormat(new DateObject().set('date',getToday()).subtract(6,'days'))),
+        to:convertDate(dateFormat(new DateObject().set('date',getToday()).add(1,'days')))
     };
 
     useEffect(()=>{
@@ -149,8 +149,8 @@ const TeamDashboard = (props) => {
                     {teams.map((team,index)=>{
                         let graph = <></>;
                         if(team.hasOwnProperty('values')){
-                            const result = team.values.filter((val) => val.range.from === range.from && val.range.to === range.to)[0].result;
-                            graph = <ReactECharts option={charts.getBarForNoOfPrs(result)} />;
+                            const {current} = getDataFromTimePeriod({key:"last",value:{days:7}},team.values);
+                            graph = <ReactECharts option={charts.getBarForNoOfPrs(current.result)} />;
                         }
                         return <div key={index} className="col-md-6">
                             <div className="dynamic-card hover-card mb-4 animated fadeIn rounded-corners position-relative background-white pointer" onClick={()=>goToTeamPage(team)}>
