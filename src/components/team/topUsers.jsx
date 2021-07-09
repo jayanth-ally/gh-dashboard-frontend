@@ -4,21 +4,17 @@ import TopChartCard from '../common/chartCard/topChartCard';
 import Loading from '../loading/loading';
 
 import {topUsersArr} from '../../config/chat-items';
+import { getDataFromTimePeriod } from '../../utils/time-conversion';
 
-const TopUsers = ({usersData,tooltipData,range}) => {
+const TopUsers = ({usersData,tooltipData,range,timeline}) => {
     let userArr = [];
     usersData.map((user,i)=>{
-        let result = {};
-        user.values.map((val)=>{
-            if(val.range.from === range.from && val.range.to === range.to){
-                result = val.result;
-            }
-        })
+        const {current} = getDataFromTimePeriod(timeline,user.values);
         userArr.push({
             _id:user.id,
             name:user.login,
             range,
-            result
+            result:current.result
         })
         
     })

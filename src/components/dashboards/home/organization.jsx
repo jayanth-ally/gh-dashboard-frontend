@@ -31,7 +31,7 @@ const Organization = ({orgData,tooltipData,timeline}) => {
             <div className="flex-container row">               
                 <ChartCard
                     result={today[0]}
-                    item={{...prsLastDay,name:' PRS in last 24hrs'}}
+                    item={{...prsLastDay,name:' PRs in last 24hrs'}}
                 />
                 <ChartCard
                     result={current}
